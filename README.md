@@ -25,9 +25,7 @@ npm run dev
 
 To remove container
 ```sh
-docker ps -a
-docker stop <containerId>
-docker remove <containerId>
+docker compose down
 ```
 
 To signup, goto `/api/auth/signup`
