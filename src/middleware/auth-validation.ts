@@ -1,14 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
-export enum UserRole {
-    Resident = "resident",
-    WasteWorker = "waste_worker",
-    Manager = "manager",
-    Admin = "admin",
-    Guest = "guest",
-}
-
 export const authSignupSchema = z.object({
     email: z.string().email(),  
     password: z
@@ -24,8 +16,7 @@ export const authSignupSchema = z.object({
             return conditions.filter(Boolean).length >= 3;
         }, "Password must include at least 3 of the following: lowercase, uppercase, number, special character (!@#$%^&*)"),
     fName: z.string(),
-    lName: z.string(),
-    role: z.enum([UserRole.Admin, UserRole.Guest, UserRole.Manager, UserRole.Resident, UserRole.WasteWorker])
+    lName: z.string()
 });
 
 export function validateAuthSignup(
@@ -37,7 +28,7 @@ export function validateAuthSignup(
   
     if (!result.success) {
       res
-        .status(400)
+        .status(400).json({ success: false, message: "An unexpected error occurred" });
       return;
     }
   
@@ -58,7 +49,7 @@ export function validateAuthSignIn(
 
   if (!result.success) {
     res
-      .status(400)
+      .status(400).json({ success: false, message: "An unexpected error occurred" });
     return;
   }
 

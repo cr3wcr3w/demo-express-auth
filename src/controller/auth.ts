@@ -20,7 +20,7 @@ export function getExpiryTime(type: "short" | "long"): Date {
 }
 
 export async function createUser(req: Request, res: Response) {
-    const { email, password, fName, lName, role } = req.body; 
+    const { email, password, fName, lName } = req.body; 
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,12 +30,11 @@ export async function createUser(req: Request, res: Response) {
                 firstName: fName,
                 lastName: lName,
                 email,
-                role,
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 encyptedPassword: hashedPassword,
             }
-        ).returning({id: user.id, role: user.role, email: user.email, first_name: user.firstName, last_name: user.lastName})
+        ).returning({id: user.id, email: user.email, first_name: user.firstName, last_name: user.lastName, role_id: user.roleId})
         if (newUser.length === 0) {
             throw new Error("An unexpected error occurred");
         }
@@ -77,7 +76,7 @@ export async function createUser(req: Request, res: Response) {
             {
                 userId: newUser[0].id,
                 email: newUser[0].email,
-                role: newUser[0].role,
+                role: newUser[0].role_id,
                 firstName: newUser[0].first_name,
                 lastName: newUser[0].last_name,
             },
@@ -103,6 +102,8 @@ export async function createUser(req: Request, res: Response) {
     }
 }
 
+// notes
+// revoke old sessions but keep recent ones or allow multiple sessions?
 export async function signInUser(req: Request, res: Response) {
     const { email, password } = req.body; 
 
@@ -153,7 +154,7 @@ export async function signInUser(req: Request, res: Response) {
             {
                 userId: existingUser[0].id,
                 email: existingUser[0].email,
-                role: existingUser[0].role,
+                role: existingUser[0].roleId,
                 firstName: existingUser[0].firstName,
                 lastName: existingUser[0].lastName,
             },

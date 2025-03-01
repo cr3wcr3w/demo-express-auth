@@ -1,17 +1,17 @@
-import { text, timestamp, boolean, pgEnum, pgSchema } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, pgEnum, pgSchema, uuid } from "drizzle-orm/pg-core";
 import { v4 as uuidv4 } from 'uuid';
 
 export const authSchema = pgSchema("auth");
 
-export const userRoleEnum = pgEnum("user_role", ["resident", "waste_worker", "manager", "admin", "guest"]);
+export const userRoleEnum = pgEnum("user_role", ["super_admin", "admin", "guest"]);
 
 export const user = authSchema.table("user", {
-    id: text("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
     firstName: text('first_name').notNull(),
     lastName: text('last_name').notNull(),
     email: text('email').notNull().unique(),
     image: text('image'),
-    role: userRoleEnum("role").notNull().default('guest'),
+    roleId: uuid("role_id").references(() => roles.id, { onDelete: "set null" }),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
     encyptedPassword: text('encyrpted_password').notNull(),
@@ -23,9 +23,16 @@ export const user = authSchema.table("user", {
     reauthenticationSentAt: timestamp('reauthentication_sent_at')
 });
 
+export const roles = authSchema.table("roles", {
+    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    name: userRoleEnum("name").notNull().unique(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+});
+
 export const session = authSchema.table("session", {
-    id: text("id").primaryKey().$defaultFn(() => uuidv4()),
-    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    userId: uuid('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
     // If not_after is reached, the session expires.
@@ -37,19 +44,19 @@ export const session = authSchema.table("session", {
 });
 
 export const refreshTokens = authSchema.table("refresh_tokens", {
-    id: text("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
     token: text("token").notNull().unique(),
-    sessionId: text("session_id").notNull().references(() => session.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id").notNull().references(() => session.id, { onDelete: "cascade" }),
     revoked: boolean("revoked").default(false),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull()
 });
 
 export const oneTimeTokens = authSchema.table("one_time_tokens", {
-    id: text("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
     tokenType: text("token_type").notNull(), // e.g., "email_verification", "password_reset"
     tokenHash: text("token_hash").notNull().unique(),
-    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
     revoked: boolean("revoked").default(false),
