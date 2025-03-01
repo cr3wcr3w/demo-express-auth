@@ -1,5 +1,5 @@
 # Token-Based Authentication Demo
-This project demonstrates a token-based authentication system.
+This project demonstrates a token-based auth system.
 
 [Watch the demo](https://drive.google.com/file/d/1NsOfH24MgFz1GKbIf32WlyWMJbdUbohi/view?usp=drive_link)
 
