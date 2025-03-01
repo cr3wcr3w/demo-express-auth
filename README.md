@@ -14,12 +14,13 @@ This project demonstrates a token-based authentication system.
 
 To set up the project, run the following commands:
 
-```sh
+```bash
 docker compose up
 npm run db:generate
 npm run db:migrate
 npm run db:studio
 npm run dev
+// Optionally, run the seed in Drizzle Studio
 ```
 
 To remove container
@@ -125,7 +126,7 @@ export const oneTimeTokens = authSchema.table("one_time_tokens", {
 
 ### Signup Flow
 1. A new record is created in the `user` table.
-2. A new session record is created in the `session` table (if auto-login is enabled)
+2. A new session record is created in the `session` table
 3. A refresh token is generated and stored in the `refresh_tokens` table.
 
 ### Signin Flow
