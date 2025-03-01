@@ -1,7 +1,7 @@
 # Token-Based Authentication Demo
 This project demonstrates a token-based auth system.
 
-[Watch the demo](https://drive.google.com/file/d/1NsOfH24MgFz1GKbIf32WlyWMJbdUbohi/view?usp=drive_link)
+[Watch the demo](https://drive.google.com/file/d/19ubCErHlTz9A58Jq_WzWzw1l373OVppI/view?usp=drive_link)
 
 ## Tech Stack
  - express.js
@@ -67,17 +67,4 @@ To signin, goto `/api/auth/signin`
    - Hash the token and look it up in `one_time_tokens`.
    - If found, revoke it and proceed with the action.
 
-## Token Management
-
-- **Access Token:**
-  - Short-lived: 2 minutes
-  - Stores user identifier, claims, permissions, roles
-  - Stored in memory (lost on full reload)
-  - Generated for every authorized request
-
-- **Refresh Token:**
-  - Long-lived: 1 day
-  - Stores user identifier
-  - Stored in a `httpOnly` cookie and database
-  - Generated at login
 

@@ -19,6 +19,21 @@
 
 5. Rate Limiting
 
+
+## Token Management
+
+- **Access Token:**
+  - Short-lived: 2 minutes
+  - Stores user identifier, claims, permissions, roles
+  - Stored in memory (lost on full reload)
+  - Generated for every authorized request
+
+- **Refresh Token:**
+  - Long-lived: 1 day
+  - Stores user identifier
+  - Stored in a `httpOnly` cookie and database
+  - Generated at login
+
 ## todo 
 1. create a sample protected api routes 
 2. use scrypt
