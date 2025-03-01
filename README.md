@@ -1,7 +1,7 @@
 # Token-Based Authentication Demo
 This project demonstrates a token-based authentication system.
 
-[Watch the demo](https://drive.google.com/file/d/1jS9XI4IZDmlEyX3Qh7Bi-B_ZiULoQzX2/view?usp=sharing)
+[Watch the demo](https://drive.google.com/file/d/1NsOfH24MgFz1GKbIf32WlyWMJbdUbohi/view?usp=drive_link)
 
 ## Tech Stack
  - express.js
@@ -19,6 +19,7 @@ docker compose up
 npm run db:generate
 npm run db:migrate
 npm run db:studio
+npm run dev
 ```
 
 To remove container
