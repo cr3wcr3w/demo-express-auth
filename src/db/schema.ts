@@ -1,12 +1,12 @@
 import { text, timestamp, boolean, pgEnum, pgSchema, uuid } from "drizzle-orm/pg-core";
-import { v4 as uuidv4 } from 'uuid';
+import { sql } from "drizzle-orm";
 
 export const authSchema = pgSchema("auth");
 
 export const userRoleEnum = pgEnum("user_role", ["super_admin", "admin", "guest"]);
 
 export const user = authSchema.table("user", {
-    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     firstName: text('first_name').notNull(),
     lastName: text('last_name').notNull(),
     email: text('email').notNull().unique(),
@@ -24,14 +24,14 @@ export const user = authSchema.table("user", {
 });
 
 export const roles = authSchema.table("roles", {
-    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     name: userRoleEnum("name").notNull().unique(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
 
 export const session = authSchema.table("session", {
-    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: uuid('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
@@ -44,7 +44,7 @@ export const session = authSchema.table("session", {
 });
 
 export const refreshTokens = authSchema.table("refresh_tokens", {
-    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     token: text("token").notNull().unique(),
     sessionId: uuid("session_id").notNull().references(() => session.id, { onDelete: "cascade" }),
     revoked: boolean("revoked").default(false),
@@ -53,7 +53,7 @@ export const refreshTokens = authSchema.table("refresh_tokens", {
 });
 
 export const oneTimeTokens = authSchema.table("one_time_tokens", {
-    id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     tokenType: text("token_type").notNull(), // e.g., "email_verification", "password_reset"
     tokenHash: text("token_hash").notNull().unique(),
     userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
