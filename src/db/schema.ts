@@ -17,10 +17,7 @@ export const user = authSchema.table("user", {
     encryptedPassword: text('encrypted_password').notNull(),
     // Token for password reset (forgot password).
     recoveryToken: text('recovery_token'),
-    recoverySentAt: timestamp('recovery_sent_at'),
-    // Token used for re-authentication (e.g., changing email/password).
-    reauthenticationToken: text('reauthentication_token'),
-    reauthenticationSentAt: timestamp('reauthentication_sent_at')
+    recoverySentAt: timestamp('recovery_sent_at')
 });
 
 export const roles = authSchema.table("roles", {
@@ -54,7 +51,7 @@ export const refreshTokens = authSchema.table("refresh_tokens", {
 
 export const oneTimeTokens = authSchema.table("one_time_tokens", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-    tokenType: text("token_type").notNull(), // e.g., "email_verification", "password_reset"
+    tokenType: text("token_type").notNull(), // e.g., "email_verification", "password_reset", "re_authentication", "invitation"
     tokenHash: text("token_hash").notNull().unique(),
     userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp('created_at').notNull(),
