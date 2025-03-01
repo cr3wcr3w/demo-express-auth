@@ -50,8 +50,6 @@ To signin, goto `/api/auth/signin`
 
 ### Signup Flow
 1. A new record is created in the `user` table.
-2. A new session record is created in the `session` table
-3. A refresh token is generated and stored in the `refresh_tokens` table.
 
 ### Signin Flow
 1. Retrieve user data based on email.

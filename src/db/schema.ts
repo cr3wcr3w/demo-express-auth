@@ -39,8 +39,8 @@ export const session = authSchema.table("session", {
     notAfter: timestamp('not_after').notNull(),
     // If a refresh token is used, refresh_at is updated.
     refreshAt: timestamp("refresh_at"),
-    ipAddress: text('ip_address'),
-    userAgent: text('user_agent'),
+    ipAddress: text('ip_address').notNull(),
+    userAgent: text('user_agent').notNull(),
 });
 
 export const refreshTokens = authSchema.table("refresh_tokens", {

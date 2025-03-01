@@ -7,11 +7,11 @@ import { eq } from 'drizzle-orm';
 import { db } from "../db";
 import { user, session, refreshTokens } from "../db/schema";
 
-export function getExpiryTime(type: "short" | "long"): Date {
+export function getExpiryTime(type: "day" | "week"): Date {
     const now = new Date();
     const expiryMap = {
-        short: 2 * 60 * 1000, // 2 min
-        long: 24 * 60 * 60 * 1000, // 1 day
+        day: 24 * 60 * 60 * 1000, // 1 day
+        week: 7 * 24 * 60 * 60 * 1000, // 1 week
     };
 
     return new Date(now.getTime() + expiryMap[type]);
@@ -32,76 +32,21 @@ export async function createUser(req: Request, res: Response) {
             throw new Error("An unexpected error occurred");
         }
 
-        let accessToken;
-        let refreshToken;
-        const privateKey = process.env.BACKEND_AUTH_PRIVATE_KEY!
-
-        await db.transaction(async (tx) => {
-            const newUser = await tx.insert(user).values(
-                {
-                    firstName: fName,
-                    lastName: lName,
-                    email,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    encryptedPassword: hashedPassword,
-                }
-            ).returning({ id: user.id, email: user.email, first_name: user.firstName, last_name: user.lastName, role_id: user.roleId })
-
-            if (newUser.length === 0) {
-                throw new Error("An unexpected error occurred");
+        const newUser = await db.insert(user).values(
+            {
+                firstName: fName,
+                lastName: lName,
+                email,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                encryptedPassword: hashedPassword,
             }
+        ).returning({ id: user.id, email: user.email, first_name: user.firstName, last_name: user.lastName, role_id: user.roleId })
+        if (newUser.length === 0) {
+            throw new Error("An unexpected error occurred");
+        }
 
-            const newSession = await tx.insert(session).values(
-                {
-                    userId: newUser[0].id,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    notAfter: getExpiryTime('long'),
-                }
-            ).returning({ id: session.id })
-            if (newSession.length === 0) {
-                throw new Error("An unexpected error occurred");
-            }
-
-            refreshToken = jwt.sign({
-                jti: uuidv4(),
-                userId: newUser[0].id,
-                email: newUser[0].email,
-            }, privateKey, { expiresIn: '1d' });
-
-            const newRefreshTokens = await tx.insert(refreshTokens).values(
-                {
-                    sessionId: newSession[0].id,
-                    token: refreshToken,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                }
-            ).returning({ id: refreshTokens.id })
-
-            if (newRefreshTokens.length === 0) {
-                throw new Error("An unexpected error occurred");
-            }
-
-            accessToken = jwt.sign(
-                {
-                    userId: newUser[0].id,
-                    email: newUser[0].email,
-                    role: newUser[0].role_id,
-                    firstName: newUser[0].first_name,
-                    lastName: newUser[0].last_name,
-                },
-                privateKey,
-                { expiresIn: "2m", algorithm: "HS256", }
-            );
-        })
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
-        }).status(200).json({ success: true, message: "User created successfully", accessToken });
+        res.status(200).json({ success: true, message: "User created successfully" });
 
     } catch (error) {
         res.status(500).json(
@@ -112,10 +57,11 @@ export async function createUser(req: Request, res: Response) {
     }
 }
 
-// notes
-// revoke old sessions but keep recent ones or allow multiple sessions?
 export async function signInUser(req: Request, res: Response) {
     const { email, password } = req.body;
+
+    const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
+    const userAgent = req.headers["user-agent"] || "unknown";
 
     try {
 
@@ -155,7 +101,9 @@ export async function signInUser(req: Request, res: Response) {
                 userId: existingUser[0].id,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                notAfter: getExpiryTime('long'),
+                notAfter: getExpiryTime('week'),
+                ipAddress,
+                userAgent
             }).returning({ id: session.id });
             if (newSession.length === 0) {
                 throw new Error("An unexpected error occurred");
