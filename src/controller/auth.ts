@@ -24,6 +24,9 @@ export async function createUser(req: Request, res: Response) {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
+        if (!hashedPassword) {
+            throw new Error("An unexpected error occurred");
+        }
         
         const newUser = await db.insert(user).values(
             {
@@ -32,7 +35,7 @@ export async function createUser(req: Request, res: Response) {
                 email,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                encyptedPassword: hashedPassword,
+                encryptedPassword: hashedPassword,
             }
         ).returning({id: user.id, email: user.email, first_name: user.firstName, last_name: user.lastName, role_id: user.roleId})
         if (newUser.length === 0) {
@@ -90,8 +93,7 @@ export async function createUser(req: Request, res: Response) {
             sameSite: "strict",
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         })
-        .header("Authorization", `Bearer ${accessToken}`)
-        .status(200).json({ success: true, message: "User created successfully" });
+        .status(200).json({ success: true, message: "User created successfully", accessToken });
 
     }catch (error) {
         res.status(500).json(
@@ -114,7 +116,7 @@ export async function signInUser(req: Request, res: Response) {
             throw new Error("Invalid email or password");
         }
         
-        const passwordResult = await bcrypt.compare(password, existingUser[0].encyptedPassword);
+        const passwordResult = await bcrypt.compare(password, existingUser[0].encryptedPassword);
         if (!passwordResult) {
             throw new Error("Invalid email or password");
         }
@@ -168,8 +170,7 @@ export async function signInUser(req: Request, res: Response) {
             sameSite: "strict",
             maxAge: 24 * 60 * 60 * 1000  // 1 day
         })
-        .header("Authorization", `Bearer ${accessToken}`)
-        .status(200).json({success: true, message: "User login successfully"})
+        .status(200).json({success: true, message: "User login successfully", accessToken})
 
     }catch (error) {
         res.status(500).json(

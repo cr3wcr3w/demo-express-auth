@@ -14,7 +14,7 @@ export const user = authSchema.table("user", {
     roleId: uuid("role_id").references(() => roles.id, { onDelete: "set null" }),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
-    encyptedPassword: text('encyrpted_password').notNull(),
+    encryptedPassword: text('encrypted_password').notNull(),
     // Token for password reset (forgot password).
     recoveryToken: text('recovery_token'),
     recoverySentAt: timestamp('recovery_sent_at'),
