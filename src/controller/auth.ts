@@ -57,29 +57,28 @@ export async function createUser(req: Request, res: Response) {
 }
 
 export async function signInUser(req: Request, res: Response) {
-    const { email, password } = req.body;
-    const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
-    const userAgent = req.headers["user-agent"] || "unknown";
-
     try {
+        const { email, password } = req.body;
+        const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
+        const userAgent = req.headers["user-agent"] || "unknown";
 
         const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1)
         if (existingUser.length === 0) {
-            throw new Error("Invalid email or password");
+            res.status(401).json({ success: false, message: "Invalid email or password" });
+            return
         }
 
         const passwordResult = await bcrypt.compare(password, existingUser[0].encryptedPassword);
         if (!passwordResult) {
-            throw new Error("Invalid email or password");
+            res.status(401).json({ success: false, message: "Invalid email or password" });
+            return
         }
 
-        // openssl rand -hex 32
         const privateKey = process.env.BACKEND_AUTH_PRIVATE_KEY!
-        let refreshToken;
+        let refreshToken: string | null = null;
 
         try {
-            await db.transaction(async (tx) => {
-
+            await db.transaction(async (tx) => {    
                 const newSession = await tx.insert(session).values({
                     userId: existingUser[0].id,
                     createdAt: new Date(),
@@ -89,15 +88,23 @@ export async function signInUser(req: Request, res: Response) {
                     userAgent
                 }).returning({ id: session.id });
                 if (newSession.length === 0) {
-                    throw new Error("An unexpected error occurred");
+                    res.status(500).json({ success: false, message: "Failed to create session" });
+                    return
                 }
 
-                refreshToken = jwt.sign({
-                    email: existingUser[0].email,
-                    firstName: existingUser[0].firstName,
-                    lastName: existingUser[0].lastName,
-                    id: newSession[0].id
-                }, privateKey, { expiresIn: '1d' });
+                refreshToken = jwt.sign(
+                    {
+                        email: existingUser[0].email,
+                        firstName: existingUser[0].firstName,
+                        lastName: existingUser[0].lastName,
+                        id: newSession[0].id
+                
+                    }, 
+                    privateKey, 
+                    { 
+                        expiresIn: '1d' 
+                    }
+                );
 
                 const newRefreshToken = await tx.insert(refreshTokens).values(
                     {
@@ -108,13 +115,16 @@ export async function signInUser(req: Request, res: Response) {
                     }
                 ).returning({ id: refreshTokens.id });
                 if (newRefreshToken.length === 0) {
-                    throw new Error("An unexpected error occurred");
+                    res.status(500).json({ success: false, message: "Failed to store refresh token" });
+                    return
                 }
             })
     
         } catch (error) {
-            throw new Error("An unexpected error occurred");
+            res.status(500).json({ success: false, message: "Transaction failed" })
+            return
         }
+
         const accessToken = jwt.sign(
             {
                 email: existingUser[0].email,
@@ -130,14 +140,12 @@ export async function signInUser(req: Request, res: Response) {
             secure: true,
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000  // 1 week
-        }).status(200).json({ success: true, message: "User signin successfully", accessToken })
-
-    } catch (error) {
-        res.status(500).json(
-            {
-                success: false,
-                message: error instanceof Error ? error.message : "An unexpected error occurred",
-            })
+        })
+        res.status(200).json({ success: true, message: "User signin successfully", accessToken })
+        return
+    } catch (_) {
+        res.status(500).json({ success: false, message: "Internal server error" });
+        return
     }
 }
 
