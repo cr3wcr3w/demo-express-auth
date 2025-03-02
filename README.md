@@ -67,15 +67,16 @@ To signin, goto `/api/auth/signin`
 5. The user is now logged out.
 
 ### Authorization Flow
-1. The client sends a request to a protected route with the access token in the Authorization header: `Authorization: Bearer <access_token>`
-2. The backend verifies the access token.
+1. The client sends a request to a protected route with the access token in the `Authorization header: Authorization: Bearer <access_token>`.
+2. The backend verifies the access token:
     - If valid, proceed with the request.
     - If expired or invalid, return a 401 Unauthorized error.
-3. If the token is expired, the client must send the refresh token (stored in cookies) along with the request.
+    - If the access token is expired, the client must send the refresh token (stored in cookies) along with the request.
 4. The backend verifies the refresh token:
     - If valid, decode it to extract the session ID.
     - Check if the session exists and is not expired or revoked.
     - If everything is valid, allow the request to proceed.
+    - If invalid, the client needs to call logout to clear cookies.
 
 ### Refresh Flow
 1. The backend verifies the refresh token:
