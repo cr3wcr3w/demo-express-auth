@@ -85,7 +85,8 @@ export async function signInUser(req: Request, res: Response) {
         }, privateKey, { expiresIn: '1d' });
         const accessToken = jwt.sign(
             {
-                userId: existingUser[0].id,
+                alg: "HS256",
+                typ: "JWT",
                 email: existingUser[0].email,
                 role: existingUser[0].roleId,
                 firstName: existingUser[0].firstName,
@@ -126,8 +127,8 @@ export async function signInUser(req: Request, res: Response) {
             httpOnly: true,
             secure: true,
             sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000  // 1 day
-        }).status(200).json({ success: true, message: "User login successfully", accessToken })
+            maxAge: 7 * 24 * 60 * 60 * 1000  // 1 week
+        }).status(200).json({ success: true, message: "User signin successfully", accessToken })
 
     } catch (error) {
         res.status(500).json(
