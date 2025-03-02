@@ -1,9 +1,7 @@
-import { text, timestamp, boolean, pgEnum, pgSchema, uuid } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, pgEnum, pgSchema, uuid, json } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const authSchema = pgSchema("auth");
-
-export const userRoleEnum = pgEnum("user_role", ["super_admin", "admin", "guest"]);
 
 export const user = authSchema.table("user", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -19,6 +17,8 @@ export const user = authSchema.table("user", {
     recoveryToken: text('recovery_token'),
     recoverySentAt: timestamp('recovery_sent_at')
 });
+
+export const userRoleEnum = pgEnum("user_role_enum", ["super_admin", "admin", "guest"]);
 
 export const roles = authSchema.table("roles", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -49,13 +49,21 @@ export const refreshTokens = authSchema.table("refresh_tokens", {
     updatedAt: timestamp('updated_at').notNull()
 });
 
+export const tokenTypeEnum = pgEnum("token_type_enum", [
+    "email_verification",
+    "password_reset",
+    "re_authentication",
+    "invitation",
+]);
+
 export const oneTimeTokens = authSchema.table("one_time_tokens", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-    tokenType: text("token_type").notNull(), // e.g., "email_verification", "password_reset", "re_authentication", "invitation"
+    tokenType: tokenTypeEnum('token_type').notNull(),
     tokenHash: text("token_hash").notNull().unique(),
     userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-    createdAt: timestamp('created_at').notNull(),
-    updatedAt: timestamp('updated_at').notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
     revoked: boolean("revoked").default(false),
+    metadata: json("metadata").default(sql`'{}'::json`).notNull()
 });
 

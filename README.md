@@ -84,12 +84,50 @@ To signin, goto `/api/auth/signin`
     - If valid, then sent back to the client
 
 
-### Email Verification, Password Reset, Reauthentication, Invitation
-1. Generate a token and store it in `one_time_tokens`.
-2. Send the token as a link.
-3. When the user clicks the link:
-   - Extract the token from the URL.
-   - Hash the token and look it up in `one_time_tokens`.
-   - If found, revoke it and proceed with the action.
+### Email Verification, Password Reset, Reauthentication, Invitation `(not implemented yet)`
+1. Frontend Calls `auth/create_token`
+    - The frontend sends a request to POST `/auth/create_token` with:
+        - `tokenType` (`email_verification`, `password_reset`, `invitation`, etc)
+        - `userId`
+        - `metadata` (optional, e.g., `{ "role": "admin" }` for invitations)
+    - Backend does the following:
+        - Generates a secure random token.
+        - Saves it in the one_time_tokens table along with:
+            - `tokenType`
+            - `userId`
+            - `metadata`
+            - `createdAt`, `updatedAt`
+        - Sends the plain token (not hashed) in an email with a URL like:
+            - `https://your-app.com/auth/verify?token=xxx`
+2. User Clicks the Link in Email
+    - The frontend extracts the `token` from the URL.
+3. Frontend Calls `auth/validate_token?token=xxx`
+    - Frontend sends the plain token to the backend.
+    - Backend does the following:
+        - Hashes the received token.
+        - Looks up the hashed token in `one_time_tokens`.
+        - If no token is found → Return error (invalid).
+        - If found and `revoked = false`:
+            - Revokes the token (`revoked = true`).
+            - Generates a one_time_token and sends it in cookie
+                - valid for 1 hour
+                - httpOnly
+                - samesite
+            - return json 
+            ```json
+            {
+                "tokenType": "invitation",
+                "metadata": { "role": "admin" }
+                // "tokenType": "password_reset",
+                // "metadata": {}
+            }
+            ``` 
+4. Frontend Redirects Based on Token Type and meta data
+    - Frontend reads the response, checks the tokenType and metadata, and redirects the user:
+        - When the user accesses `/email-verified`, `/reset-password`, or `/signup?role=admin`:
+            - Backend checks the cookie.
+            - If the access token is expired → return an error
+            - If the access token is valid → Allow the action.
 
-
+5. Backend Checks Access Token for Any Request
+   - backend will look at the cookie if its not expired
