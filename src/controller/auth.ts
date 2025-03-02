@@ -17,18 +17,19 @@ export function getExpiryTime(type: "day" | "week"): Date {
 }
 
 export async function createUser(req: Request, res: Response) {
-    const { email, password, fName, lName } = req.body;
-
     try {
+        const { email, password, fName, lName } = req.body;
 
         const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1)
         if (existingUser.length > 0) {
-            throw new Error("An account with this email already exists");
+            res.status(409).json({ success: false, message: "An account with this email already exists" });
+            return
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
         if (!hashedPassword) {
-            throw new Error("An unexpected error occurred");
+            res.status(500).json({ success: false, message: "Failed to hash password" });
+            return
         }
 
         const newUser = await db.insert(user).values(
@@ -42,17 +43,15 @@ export async function createUser(req: Request, res: Response) {
             }
         ).returning({ id: user.id, email: user.email, first_name: user.firstName, last_name: user.lastName, role_id: user.roleId })
         if (newUser.length === 0) {
-            throw new Error("An unexpected error occurred");
+            res.status(500).json({ success: false, message: "Failed to create user" });
+            return
         }
 
-        res.status(200).json({ success: true, message: "User created successfully" });
-
-    } catch (error) {
-        res.status(500).json(
-            {
-                success: false,
-                message: error instanceof Error ? error.message : "An unexpected error occurred",
-            })
+        res.status(201).json({ success: true, message: "User created successfully" });
+        return
+    } catch (_) {
+        res.status(500).json({ success: false, message: "Internal server error" });
+        return
     }
 }
 
