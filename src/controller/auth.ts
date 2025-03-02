@@ -170,49 +170,52 @@ export const revokeRefreshToken = async (req: Request, res: Response) => {
     }
 };
 
-export const refreshAccessToken = async (req: Request, res: Response) => {
+export const refreshAccessToken = async (req: Request, res: Response)  => {
     try {
         const token = req.cookies.refreshToken
 
         if (!token) {
-            throw new Error("Forbidden");
+            res.status(401).json({ success: false, message: "Missing refresh token" });
+            return
         }
 
         const storedToken = await db.select().from(refreshTokens).where(eq(refreshTokens.token, token));
 
         if (storedToken.length === 0) {
-            throw new Error("Forbidden");
+            res.status(403).json({ success: false, message: "Invalid refresh token" });
+            return
         }
 
         const privateKey = process.env.BACKEND_AUTH_PRIVATE_KEY!
 
-        jwt.verify(token, privateKey, (err: jwt.VerifyErrors | null, decoded: jwt.JwtPayload | string | undefined) => {
-            if (err) {
-                throw new Error("Forbidden");
-            }
+        let decoded: jwt.JwtPayload;
+        try {
+            decoded = jwt.verify(token, privateKey) as jwt.JwtPayload;
+        } catch (err) {
+            res.status(403).json({ success: false, message: "Invalid or expired refresh token" });
+            return
+        }
 
-            if (!decoded || typeof decoded !== "object" || !decoded.email || !decoded.firstName || !decoded.lastName ) {
-                throw new Error("Forbidden");
-            }
+        if (!decoded || !decoded.email || !decoded.firstName || !decoded.lastName) {
+            res.status(403).json({ success: false, message: "Malformed refresh token" });
+            return
+        }
 
-            const accessToken = jwt.sign(
-                {
-                    email: (decoded as jwt.JwtPayload).email,
-                    firstName: (decoded as jwt.JwtPayload).firstName,
-                    lastName: (decoded as jwt.JwtPayload).lastName,
-                },
-                privateKey,
-                { expiresIn: "5m", algorithm: "HS256" }
-            );
-
-            res.status(200).json({ success: true, accessToken })
-        });
-
-    } catch (error) {
-        res.status(403).json(
+        const accessToken = jwt.sign(
             {
-                success: false,
-                message: error instanceof Error ? error.message : "An unexpected error occurred",
-            })
+                email: decoded.email,
+                firstName: decoded.firstName,
+                lastName: decoded.lastName,
+            },
+            privateKey,
+            { expiresIn: "5m", algorithm: "HS256" }
+        );
+
+        res.status(200).json({ success: true, accessToken });
+        return
+
+    } catch (_) {
+        res.status(500).json({ success: false, message: "Internal server error" });
+        return
     }
 };
