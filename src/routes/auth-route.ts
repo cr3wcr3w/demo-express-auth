@@ -1,7 +1,6 @@
 import express from "express";
 import { validateAuthSignIn, validateAuthSignup } from "../middleware/auth-validation";
-import { createUser, signInUser } from "../controller/auth";
-import { revokeRefreshToken } from "../middleware/auth-logout";
+import { createUser, revokeRefreshToken, signInUser } from "../controller/auth";
 
 export const authRoutes = express.Router();
 

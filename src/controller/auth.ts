@@ -138,3 +138,20 @@ export async function signInUser(req: Request, res: Response) {
             })
     }
 }
+
+export const revokeRefreshToken = async (req: Request, res: Response): Promise<void> => {
+    const token = req.cookies.refreshToken
+
+    const result = await db
+        .update(refreshTokens)
+        .set({ revoked: true })
+        .where(eq(refreshTokens.token, token));
+
+    if (result.rowCount === 0) {
+        res.status(404).json({ success: false, message: "An unexpected error occurred" });
+        return
+    }
+
+    res.clearCookie("refreshToken");
+    res.status(200).json({ success: true, message: "User signout successfully" });
+};
