@@ -142,11 +142,12 @@ export async function signInUser(req: Request, res: Response) {
 }
 
 export const revokeRefreshToken = async (req: Request, res: Response) => {
-    const token = req.cookies.refreshToken
-
     try {
+        const token = req.cookies.refreshToken
+
         if (!token) {
-            throw new Error("Forbidden");
+            res.status(401).json({ success: false, message: "Missing refresh token" });
+            return 
         }
 
         const result = await db
@@ -155,18 +156,16 @@ export const revokeRefreshToken = async (req: Request, res: Response) => {
             .where(eq(refreshTokens.token, token));
 
         if (result.rowCount === 0) {
-            throw new Error("An unexpected error occurred");
+            res.status(404).json({ success: false, message: "Refresh token not found or already revoked" });
+            return 
         }
 
         res.clearCookie("refreshToken");
-        res.status(200).json({ success: true, message: "User signout successfully" });
-
-    } catch (error) {
-        res.status(404).json(
-            {
-                success: false,
-                message: error instanceof Error ? error.message : "An unexpected error occurred",
-            })
+        res.status(200).json({ success: true, message: "User signed out successfully" });
+        return
+    } catch (_) {
+        res.status(500).json({ success: false, message: "Internal server error" });
+        return
     }
 };
 
