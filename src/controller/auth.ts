@@ -37,7 +37,6 @@ export async function createUser(req: Request, res: Response) {
                 firstName: fName,
                 lastName: lName,
                 email,
-                createdAt: new Date(),
                 updatedAt: new Date(),
                 encryptedPassword: hashedPassword,
             }
@@ -80,7 +79,6 @@ export async function signInUser(req: Request, res: Response) {
             await db.transaction(async (tx) => {    
                 const newSession = await tx.insert(session).values({
                     userId: existingUser[0].id,
-                    createdAt: new Date(),
                     updatedAt: new Date(),
                     notAfter: getExpiryTime('week'),
                     ipAddress,
@@ -109,7 +107,6 @@ export async function signInUser(req: Request, res: Response) {
                     {
                         sessionId: newSession[0].id,
                         token: refreshToken,
-                        createdAt: new Date(),
                         updatedAt: new Date(),
                     }
                 ).returning({ id: refreshTokens.id });

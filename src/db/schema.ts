@@ -10,7 +10,7 @@ export const user = authSchema.table("user", {
     email: text('email').notNull().unique(),
     image: text('image'),
     roleId: uuid("role_id").references(() => roles.id, { onDelete: "set null" }),
-    createdAt: timestamp('created_at').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull(),
     encryptedPassword: text('encrypted_password').notNull(),
     // Token for password reset (forgot password).
@@ -24,13 +24,13 @@ export const roles = authSchema.table("roles", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     name: userRoleEnum("name").notNull().unique(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow()
+    updatedAt: timestamp('updated_at').notNull()
 });
 
 export const session = authSchema.table("session", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: uuid('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull(),
     // If not_after is reached, the session expires.
     notAfter: timestamp('not_after').notNull(),
@@ -45,7 +45,7 @@ export const refreshTokens = authSchema.table("refresh_tokens", {
     token: text("token").notNull().unique(),
     sessionId: uuid("session_id").notNull().references(() => session.id, { onDelete: "cascade" }),
     revoked: boolean("revoked").default(false),
-    createdAt: timestamp('created_at').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull()
 });
 
@@ -62,7 +62,7 @@ export const oneTimeTokens = authSchema.table("one_time_tokens", {
     tokenHash: text("token_hash").notNull().unique(),
     userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull(),
     revoked: boolean("revoked").default(false),
     metadata: json("metadata").default(sql`'{}'::json`).notNull()
 });

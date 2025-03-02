@@ -117,14 +117,14 @@ To signin, goto `/api/auth/signin`
             ```json
             {
                 "tokenType": "invitation",
-                "metadata": { "role": "admin" }
+                "metadata": { "role": "clown" }
                 // "tokenType": "password_reset",
                 // "metadata": {}
             }
             ``` 
 4. Frontend Redirects Based on Token Type and meta data
     - Frontend reads the response, checks the tokenType and metadata, and redirects the user:
-        - When the user accesses `/email-verified`, `/reset-password`, or `/signup?role=admin`:
+        - When the user accesses `/email-verified`, `/reset-password`, or `/signup?role=clown`:
             - Backend checks the cookie.
             - If the access token is expired → return an error
             - If the access token is valid → Allow the action.
