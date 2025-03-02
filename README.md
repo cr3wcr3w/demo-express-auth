@@ -1,7 +1,7 @@
 # Token-Based Authentication Demo
 This project demonstrates a token-based auth system.
 
-[Watch the demo](https://drive.google.com/file/d/19ubCErHlTz9A58Jq_WzWzw1l373OVppI/view?usp=drive_link)
+[Watch the demo](https://drive.google.com/file/d/1MWEBoHmmbbAgP8kQrX8RzJPiHX8BssxH/view?usp=drive_link)
 
 ## Tech Stack
  - express.js
@@ -46,7 +46,7 @@ To signin, goto `/api/auth/signin`
 }
 ```
 
-## Authentication Flow
+## Auth Flow
 
 ### Signup Flow
 1. A new record is created in the `user` table.
@@ -58,6 +58,30 @@ To signin, goto `/api/auth/signin`
    - A new session record is created in the `session` table.
    - A new refresh token is created in the `refresh_tokens` table.
 4. Generate an access token and return it along with the refresh token.
+
+### Signout Flow
+1. The user sends a POST request to /api/auth/logout.
+2. The refresh token is retrieved from the cookie.
+3. If found in the database, it is marked as revoked: true.
+4. The refresh token cookie is cleared from the client.
+5. The user is now logged out.
+
+### Authorization Flow
+1. The client sends a request to a protected route with the access token in the Authorization header: `Authorization: Bearer <access_token>`
+2. The backend verifies the access token.
+    - If valid, proceed with the request.
+    - If expired or invalid, return a 401 Unauthorized error.
+3. If the token is expired, the client must send the refresh token (stored in cookies) along with the request.
+4. The backend verifies the refresh token:
+    - If valid, decode it to extract the session ID.
+    - Check if the session exists and is not expired or revoked.
+    - If everything is valid, allow the request to proceed.
+
+### Refresh Flow
+1. The backend verifies the refresh token:
+    - If the refresh token is invalid or expired
+    - If valid, then sent back to the client
+
 
 ### Email Verification, Password Reset, Reauthentication, Invitation
 1. Generate a token and store it in `one_time_tokens`.

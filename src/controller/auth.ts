@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from 'uuid';
 import { eq } from 'drizzle-orm';
 
 import { db } from "../db";
@@ -59,7 +58,6 @@ export async function createUser(req: Request, res: Response) {
 
 export async function signInUser(req: Request, res: Response) {
     const { email, password } = req.body;
-
     const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
     const userAgent = req.headers["user-agent"] || "unknown";
 
@@ -77,51 +75,55 @@ export async function signInUser(req: Request, res: Response) {
 
         // openssl rand -hex 32
         const privateKey = process.env.BACKEND_AUTH_PRIVATE_KEY!
+        let refreshToken;
 
-        const refreshToken = jwt.sign({
-            jti: uuidv4(),
-            userId: existingUser[0].id,
-            email: existingUser[0].email,
-        }, privateKey, { expiresIn: '1d' });
+        try {
+            await db.transaction(async (tx) => {
+
+                const newSession = await tx.insert(session).values({
+                    userId: existingUser[0].id,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    notAfter: getExpiryTime('week'),
+                    ipAddress,
+                    userAgent
+                }).returning({ id: session.id });
+                if (newSession.length === 0) {
+                    throw new Error("An unexpected error occurred");
+                }
+
+                refreshToken = jwt.sign({
+                    email: existingUser[0].email,
+                    firstName: existingUser[0].firstName,
+                    lastName: existingUser[0].lastName,
+                    id: newSession[0].id
+                }, privateKey, { expiresIn: '1d' });
+
+                const newRefreshToken = await tx.insert(refreshTokens).values(
+                    {
+                        sessionId: newSession[0].id,
+                        token: refreshToken,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    }
+                ).returning({ id: refreshTokens.id });
+                if (newRefreshToken.length === 0) {
+                    throw new Error("An unexpected error occurred");
+                }
+            })
+    
+        } catch (error) {
+            throw new Error("An unexpected error occurred");
+        }
         const accessToken = jwt.sign(
             {
-                alg: "HS256",
-                typ: "JWT",
                 email: existingUser[0].email,
-                role: existingUser[0].roleId,
                 firstName: existingUser[0].firstName,
                 lastName: existingUser[0].lastName,
             },
             privateKey,
-            { expiresIn: "2m", algorithm: "HS256", }
+            { expiresIn: "5m", algorithm: "HS256", }
         )
-
-        await db.transaction(async (tx) => {
-
-            const newSession = await tx.insert(session).values({
-                userId: existingUser[0].id,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                notAfter: getExpiryTime('week'),
-                ipAddress,
-                userAgent
-            }).returning({ id: session.id });
-            if (newSession.length === 0) {
-                throw new Error("An unexpected error occurred");
-            }
-
-            const newRefreshToken = await tx.insert(refreshTokens).values(
-                {
-                    sessionId: newSession[0].id,
-                    token: refreshToken,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                }
-            ).returning({ id: refreshTokens.id });
-            if (newRefreshToken.length === 0) {
-                throw new Error("An unexpected error occurred");
-            }
-        })
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
@@ -139,19 +141,78 @@ export async function signInUser(req: Request, res: Response) {
     }
 }
 
-export const revokeRefreshToken = async (req: Request, res: Response): Promise<void> => {
+export const revokeRefreshToken = async (req: Request, res: Response) => {
     const token = req.cookies.refreshToken
 
-    const result = await db
-        .update(refreshTokens)
-        .set({ revoked: true })
-        .where(eq(refreshTokens.token, token));
+    try {
+        if (!token) {
+            throw new Error("Forbidden");
+        }
 
-    if (result.rowCount === 0) {
-        res.status(404).json({ success: false, message: "An unexpected error occurred" });
-        return
+        const result = await db
+            .update(refreshTokens)
+            .set({ revoked: true })
+            .where(eq(refreshTokens.token, token));
+
+        if (result.rowCount === 0) {
+            throw new Error("An unexpected error occurred");
+        }
+
+        res.clearCookie("refreshToken");
+        res.status(200).json({ success: true, message: "User signout successfully" });
+
+    } catch (error) {
+        res.status(404).json(
+            {
+                success: false,
+                message: error instanceof Error ? error.message : "An unexpected error occurred",
+            })
     }
+};
 
-    res.clearCookie("refreshToken");
-    res.status(200).json({ success: true, message: "User signout successfully" });
+export const refreshAccessToken = async (req: Request, res: Response) => {
+    try {
+        const token = req.cookies.refreshToken
+
+        if (!token) {
+            throw new Error("Forbidden");
+        }
+
+        const storedToken = await db.select().from(refreshTokens).where(eq(refreshTokens.token, token));
+
+        if (storedToken.length === 0) {
+            throw new Error("Forbidden");
+        }
+
+        const privateKey = process.env.BACKEND_AUTH_PRIVATE_KEY!
+
+        jwt.verify(token, privateKey, (err: jwt.VerifyErrors | null, decoded: jwt.JwtPayload | string | undefined) => {
+            if (err) {
+                throw new Error("Forbidden");
+            }
+
+            if (!decoded || typeof decoded !== "object" || !decoded.email || !decoded.firstName || !decoded.lastName ) {
+                throw new Error("Forbidden");
+            }
+
+            const accessToken = jwt.sign(
+                {
+                    email: (decoded as jwt.JwtPayload).email,
+                    firstName: (decoded as jwt.JwtPayload).firstName,
+                    lastName: (decoded as jwt.JwtPayload).lastName,
+                },
+                privateKey,
+                { expiresIn: "5m", algorithm: "HS256" }
+            );
+
+            res.status(200).json({ success: true, accessToken })
+        });
+
+    } catch (error) {
+        res.status(403).json(
+            {
+                success: false,
+                message: error instanceof Error ? error.message : "An unexpected error occurred",
+            })
+    }
 };

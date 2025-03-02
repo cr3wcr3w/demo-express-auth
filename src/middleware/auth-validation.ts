@@ -25,7 +25,7 @@ export function validateAuthSignup(
     next: NextFunction,
   ): void {
     const result = authSignupSchema.safeParse(req.body);
-  
+
     if (!result.success) {
       res
         .status(400).json({ success: false, message: "An unexpected error occurred" });
