@@ -35,6 +35,17 @@
   - Generated at login
 
 ## todo 
-1. create a sample protected api routes 
-2. use scrypt
+1. use scrypt for encrypting and decrypting
+2. each time a session is used, if it reaches the updateAge threshold, the expiration date is extended, which by default is set to 1 day.
 3. implement nodemailer using gmail, create another branch for this
+4. run testing
+
+
+---
+read owasp
+https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/
+https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+
+blogs
+https://dev.to/sre_panchanan/owasp-api52023-broken-function-level-authorization-2nhm
