@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { eq, and } from "drizzle-orm";
 
 import { db } from "../db";
-import { refreshTokens, session } from "../db/schema";
+import { refreshTokens, sessions } from "../db/schema";
 
 // if 401 = frontend will call refresh api, to get another access token
 // if 403 = frontend will call logout api, to remove cookies
@@ -54,12 +54,12 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
         const userSession = await db
             .select()
-            .from(session)
-            .innerJoin(refreshTokens, eq(refreshTokens.sessionId, session.id))
-            .where(and(eq(session.id, decodedRefreshToken.id), eq(refreshTokens.token, refreshToken)))
+            .from(sessions)
+            .innerJoin(refreshTokens, eq(refreshTokens.sessionId, sessions.id))
+            .where(and(eq(sessions.id, decodedRefreshToken.id), eq(refreshTokens.token, refreshToken)))
             .limit(1);
         
-        if (userSession.length === 0 || userSession[0].session.notAfter < new Date() || userSession[0].refresh_tokens.revoked) {
+        if (userSession.length === 0 || userSession[0].sessions.notAfter < new Date() || userSession[0].refresh_tokens.revoked) {
             res.status(403).json({ message: "Session expired or token revoked, please log in again" });
             return
         }

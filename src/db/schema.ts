@@ -1,9 +1,9 @@
-import { text, timestamp, boolean, pgEnum, pgSchema, uuid, json } from "drizzle-orm/pg-core";
+import { text, timestamp, boolean, pgEnum, pgSchema, uuid, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const authSchema = pgSchema("auth");
 
-export const user = authSchema.table("user", {
+export const users = authSchema.table("users", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     firstName: text('first_name').notNull(),
     lastName: text('last_name').notNull(),
@@ -27,9 +27,9 @@ export const roles = authSchema.table("roles", {
     updatedAt: timestamp('updated_at').notNull()
 });
 
-export const session = authSchema.table("session", {
+export const sessions = authSchema.table("sessions", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-    userId: uuid('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull(),
     // If not_after is reached, the session expires.
@@ -43,7 +43,7 @@ export const session = authSchema.table("session", {
 export const refreshTokens = authSchema.table("refresh_tokens", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     token: text("token").notNull().unique(),
-    sessionId: uuid("session_id").notNull().references(() => session.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
     revoked: boolean("revoked").default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull()
@@ -60,10 +60,10 @@ export const oneTimeTokens = authSchema.table("one_time_tokens", {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     tokenType: tokenTypeEnum('token_type').notNull(),
     tokenHash: text("token_hash").notNull().unique(),
-    userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull(),
     revoked: boolean("revoked").default(false),
-    metadata: json("metadata").default(sql`'{}'::json`).notNull()
+    metadata: jsonb("metadata")
 });
 

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { eq } from 'drizzle-orm';
 
 import { db } from "../db";
-import { user, session, refreshTokens } from "../db/schema";
+import { users, sessions, refreshTokens } from "../db/schema";
 
 export function getExpiryTime(type: "day" | "week"): Date {
     const now = new Date();
@@ -20,7 +20,7 @@ export async function createUser(req: Request, res: Response) {
     try {
         const { email, password, fName, lName } = req.body;
 
-        const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1)
+        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1)
         if (existingUser.length > 0) {
             res.status(409).json({ success: false, message: "An account with this email already exists" });
             return
@@ -32,7 +32,7 @@ export async function createUser(req: Request, res: Response) {
             return
         }
 
-        const newUser = await db.insert(user).values(
+        const newUser = await db.insert(users).values(
             {
                 firstName: fName,
                 lastName: lName,
@@ -40,7 +40,7 @@ export async function createUser(req: Request, res: Response) {
                 updatedAt: new Date(),
                 encryptedPassword: hashedPassword,
             }
-        ).returning({ id: user.id, email: user.email, first_name: user.firstName, last_name: user.lastName, role_id: user.roleId })
+        ).returning({ id: users.id, email: users.email, first_name: users.firstName, last_name: users.lastName, role_id: users.roleId })
         if (newUser.length === 0) {
             res.status(500).json({ success: false, message: "Failed to create user" });
             return
@@ -60,7 +60,7 @@ export async function signInUser(req: Request, res: Response) {
         const ipAddress = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
         const userAgent = req.headers["user-agent"] || "unknown";
 
-        const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1)
+        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1)
         if (existingUser.length === 0) {
             res.status(401).json({ success: false, message: "Invalid email or password" });
             return
@@ -77,13 +77,13 @@ export async function signInUser(req: Request, res: Response) {
 
         try {
             await db.transaction(async (tx) => {    
-                const newSession = await tx.insert(session).values({
+                const newSession = await tx.insert(sessions).values({
                     userId: existingUser[0].id,
                     updatedAt: new Date(),
                     notAfter: getExpiryTime('week'),
                     ipAddress,
                     userAgent
-                }).returning({ id: session.id });
+                }).returning({ id: sessions.id });
                 if (newSession.length === 0) {
                     res.status(500).json({ success: false, message: "Failed to create session" });
                     return
