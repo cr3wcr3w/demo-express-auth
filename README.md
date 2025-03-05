@@ -13,12 +13,12 @@ This project demonstrates a token-based auth system.
 To set up the project, run the following commands:
 
 ```bash
+npm run seed
 docker compose up
 npm run db:generate
 npm run db:migrate
 npm run db:studio
 npm run dev
-// Optionally, run the seed in Drizzle Studio
 ```
 
 To remove container
