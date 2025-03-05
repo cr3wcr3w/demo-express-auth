@@ -1,73 +1,46 @@
-import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { eq, and } from "drizzle-orm";
+import type { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken"
+import env from "../env";
 
-import { db } from "../db";
-import { refreshTokens, sessions } from "../db/schema";
+const decryptToken = async(accessToken: string) => {
+  try {
+    return await jwt.verify(accessToken, env.BACKEND_AUTH_PRIVATE_KEY)
+  } catch (_) {
+    return null
+  }
+}
 
-// if 401 = frontend will call refresh api, to get another access token
-// if 403 = frontend will call logout api, to remove cookies
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void>  => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const accessToken = authHeader && authHeader.split(' ')[1];
+export async function authenticateToken(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void>  {
+    const authHeader = req.headers['authorization'];
+    const accessToken = authHeader && authHeader.split(' ')[1];
 
-        if (!accessToken) {
-             res.status(401).json({ message: "Unauthorized" });
-             return
-        }
-
-        const privateKey = process.env.BACKEND_AUTH_PRIVATE_KEY!;
-        
-        let decodedAccessToken: jwt.JwtPayload;
-        try {
-            decodedAccessToken = jwt.verify(accessToken, privateKey) as jwt.JwtPayload;
-        } catch (error) {
-            res.status(401).json({ message: "Access token expired, please refresh" });
-            return;
-        }
-
-        if (!decodedAccessToken || typeof decodedAccessToken !== "object" || !decodedAccessToken.email || !decodedAccessToken.firstName || !decodedAccessToken.lastName) {
-             res.status(401).json({ message: "Unauthorized" });
-             return
-        }
-
-        const refreshToken = req.cookies.refreshToken
-
-        if (!refreshToken) {
-            res.status(401).json({ message: "Unauthorized" });
-            return
-        }
-
-        let decodedRefreshToken: jwt.JwtPayload;
-        try {
-            decodedRefreshToken = jwt.verify(refreshToken, privateKey) as jwt.JwtPayload;
-        } catch (error) {
-            res.status(403).json({ message: "Refresh token expired, please log in again" });
-            return;
-        }
-
-        if (!decodedRefreshToken || typeof decodedRefreshToken !== "object" || !decodedRefreshToken.id) {
-            res.status(403).json({ message: "Forbidden" });
-            return
-        }
-
-        const userSession = await db
-            .select()
-            .from(sessions)
-            .innerJoin(refreshTokens, eq(refreshTokens.sessionId, sessions.id))
-            .where(and(eq(sessions.id, decodedRefreshToken.id), eq(refreshTokens.token, refreshToken)))
-            .limit(1);
-        
-        if (userSession.length === 0 || userSession[0].sessions.notAfter < new Date() || userSession[0].refresh_tokens.revoked) {
-            res.status(403).json({ message: "Session expired or token revoked, please log in again" });
-            return
-        }
-
-        // another security layer is RLS, database layer
-        next();
-    } catch (error) {
-         res.status(500).json({ message: "Forbidden" });
-         return
+    if (!accessToken) {
+      res.status(401).json({ message: "Unauthorized" });
+      return
     }
-};
+
+    const decodedUser = await decryptToken(accessToken);
+
+    console.log({here: decodedUser})
+    
+    console.log({accessToken: accessToken, Cookies: req.cookies})
+    
+
+    // verify the 2 token
+    // check the refresh token if its revoked or not
+    // check the access token if they have role and permission to continue
+
+    // why RABC in access token?
+    // less roundtrip in db
+    // role and permission table doesn't change that much
+
+    // check the agent and ip if the same
+  
+    next();
+}
+  
+  

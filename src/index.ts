@@ -4,11 +4,13 @@ import cors from "cors";
 import cookieParser from 'cookie-parser'
 
 import { authRoutes } from "./routes/auth-route";
+import env from "./env";
+import {  applyRateLimit, RateLimitCategory } from "./middleware";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.BACKEND_PORT || 5000;
+const PORT = env.BACKEND_PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -20,7 +22,7 @@ app.get("/api", (req, res) => {
   res.send("Express + TypeScript Server is running!");
 });
 
-app.use("/api/auth", authRoutes)
+app.use("/api/auth", applyRateLimit(RateLimitCategory.STRICT), authRoutes)
 
 // Start Server
 app.listen(PORT, () => {

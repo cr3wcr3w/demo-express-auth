@@ -15,8 +15,8 @@ export const authSignupSchema = z.object({
             ];
             return conditions.filter(Boolean).length >= 3;
         }, "Password must include at least 3 of the following: lowercase, uppercase, number, special character (!@#$%^&*)"),
-    fName: z.string(),
-    lName: z.string()
+    firstName: z.string(),
+    lastName: z.string()
 });
 
 export function validateAuthSignup(
@@ -28,7 +28,7 @@ export function validateAuthSignup(
 
     if (!result.success) {
       res
-        .status(400).json({ success: false, message: "An unexpected error occurred" });
+        .status(400).json({ success: false, message: "Invalid input" });
       return;
     }
   
@@ -49,7 +49,7 @@ export function validateAuthSignIn(
 
   if (!result.success) {
     res
-      .status(400).json({ success: false, message: "An unexpected error occurred" });
+      .status(400).json({ success: false, message: "Invalid input" });
     return;
   }
 
