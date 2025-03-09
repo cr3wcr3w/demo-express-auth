@@ -1,0 +1,64 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": false,
+		"clientKind": "git",
+		"useIgnoreFile": false
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"ignore": []
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"style": {
+				"useFilenamingConvention": "error",
+				"noDefaultExport": "error",
+				"noParameterAssign": "error",
+				"noUselessElse": "error",
+				"noYodaExpression": "error",
+				"useConsistentArrayType": "error",
+				"useConsistentBuiltinInstantiation": "error",
+				"useConst": "error",
+				"useDefaultParameterLast": "error",
+				"useDefaultSwitchClause": "error",
+				"useExplicitLengthCheck": "error"
+			},
+			"correctness": {
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error"
+			},
+			"suspicious": {
+				"noConsole": "error"
+			},
+			"nursery": {
+				"noProcessEnv": "error",
+				"noSecrets": "error"
+			},
+			"performance": {
+				"noAccumulatingSpread": "error",
+				"noBarrelFile": "error",
+				"noDelete": "error",
+				"noReExportAll": "error",
+				"useTopLevelRegex": "error"
+			},
+			"security": {
+				"noGlobalEval": "error"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	}
+}

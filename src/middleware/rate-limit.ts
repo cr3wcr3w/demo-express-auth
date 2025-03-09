@@ -1,21 +1,21 @@
+import type { RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
-import { RequestHandler } from "express";
 
 export enum RateLimitCategory {
-    LENIENT = "lenient",
-    MODERATE = "moderate",
-    STRICT = "strict",
+	LENIENT = "lenient",
+	MODERATE = "moderate",
+	STRICT = "strict",
 }
 
 interface RateLimitConfig {
-    windowMs: number; // Time window in milliseconds
-    max: number; // Max requests before blocking
+	windowMs: number; // Time window in milliseconds
+	max: number; // Max requests before blocking
 }
 
 const rateConfigs: Record<RateLimitCategory, RateLimitConfig> = {
-    [RateLimitCategory.LENIENT]: { windowMs: 5 * 60 * 1000, max: 200 }, // 200 requests per 5 minutes
-    [RateLimitCategory.MODERATE]: { windowMs: 10 * 60 * 1000, max: 50 }, // 50 requests per 10 minutes
-    [RateLimitCategory.STRICT]: { windowMs: 15 * 60 * 1000, max: 5 }, // 5 requests per 15 minutes
+	[RateLimitCategory.LENIENT]: { windowMs: 5 * 60 * 1000, max: 200 }, // 200 requests per 5 minutes
+	[RateLimitCategory.MODERATE]: { windowMs: 10 * 60 * 1000, max: 50 }, // 50 requests per 10 minutes
+	[RateLimitCategory.STRICT]: { windowMs: 15 * 60 * 1000, max: 5 }, // 5 requests per 15 minutes
 };
 
 /**
@@ -24,15 +24,15 @@ const rateConfigs: Record<RateLimitCategory, RateLimitConfig> = {
  * @returns {RequestHandler} - Express middleware
  */
 export function applyRateLimit(category: RateLimitCategory): RequestHandler {
-    const config = rateConfigs[category];
+	const config = rateConfigs[category];
 
-    return rateLimit({
-        windowMs: config.windowMs,
-        max: config.max,
-        message: "Too many requests, please try again later.",
-        standardHeaders: true,
-        legacyHeaders: false,
-    });
+	return rateLimit({
+		windowMs: config.windowMs,
+		max: config.max,
+		message: "Too many requests, please try again later.",
+		standardHeaders: true,
+		legacyHeaders: false,
+	});
 }
 
 // sample
