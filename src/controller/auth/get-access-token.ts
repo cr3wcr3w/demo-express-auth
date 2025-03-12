@@ -1,5 +1,4 @@
-import { fromUnixTime, getUnixTime } from "date-fns";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { db } from "../../db";
@@ -18,7 +17,8 @@ export const getAccessToken = async (req: Request, res: Response) => {
 	try {
 		const refreshTokenCookies = req.cookies.refreshToken;
 		const decodedRefreshToken = await decryptToken(refreshTokenCookies);
-		const now = fromUnixTime(getUnixTime(new Date()));
+		const nowResult = await db.execute(sql`SELECT NOW() AS current_timestamp`);
+		const now = new Date(nowResult.rows[0].current_timestamp);
 
 		const sessionRecord = await db
 			.select({

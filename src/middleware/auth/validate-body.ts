@@ -22,6 +22,7 @@ export const authSignupSchema = z.object({
 		}, "Password must include at least 3 of the following: lowercase, uppercase, number, special character (!@#$%^&*)"),
 	firstName: z.string(),
 	lastName: z.string(),
+	// this is not needed, this will bypass for sure
 	invitationToken: z.string().optional(),
 });
 

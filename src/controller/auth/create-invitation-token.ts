@@ -17,6 +17,7 @@ export async function createInvitationToken(req: Request, res: Response) {
 			tokenType: "invitation",
 			metadata: { roleId },
 			updatedAt: sql`NOW()`,
+			notAfter: sql`NOW() + INTERVAL '1 week'`,
 		});
 
 		res.status(201).json({ message: "One-time token created.", token });

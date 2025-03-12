@@ -15,7 +15,7 @@ interface RateLimitConfig {
 const rateConfigs: Record<RateLimitCategory, RateLimitConfig> = {
 	[RateLimitCategory.LENIENT]: { windowMs: 5 * 60 * 1000, max: 200 }, // 200 requests per 5 minutes
 	[RateLimitCategory.MODERATE]: { windowMs: 10 * 60 * 1000, max: 50 }, // 50 requests per 10 minutes
-	[RateLimitCategory.STRICT]: { windowMs: 15 * 60 * 1000, max: 5 }, // 5 requests per 15 minutes
+	[RateLimitCategory.STRICT]: { windowMs: 15 * 60 * 1000, max: 10 }, // 10 requests per 15 minutes
 };
 
 /**

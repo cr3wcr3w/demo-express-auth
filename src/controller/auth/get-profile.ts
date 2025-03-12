@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { db } from "../../db";
 import { refreshTokens, sessions, users } from "../../db/schema/auth";
@@ -57,19 +57,23 @@ export const getProfile = async (
 
 		const sessionId = record[0].sessionId;
 		const sessionNotAfter = new Date(record[0].sessionNotAfter);
-		const now = new Date();
+		// SELECT DATE(NOW()) AS current_timestamp; // no time
+		// SELECT NOW() AS current_timestamp; // with time
+		const nowResult = await db.execute(sql`SELECT DATE(NOW()) AS current_date`);
+		const nowDate = new Date(nowResult.rows[0].current_date);
 
 		const sessionNotAfterDay = sessionNotAfter.getUTCDate();
-		const nowDay = now.getUTCDate();
 		const sessionNotAfterMonth = sessionNotAfter.getUTCMonth();
-		const nowMonth = now.getUTCMonth();
 		const sessionNotAfterYear = sessionNotAfter.getUTCFullYear();
-		const nowYear = now.getUTCFullYear();
+
+		const nowYear = nowDate.getUTCFullYear();
+		const nowMonth = nowDate.getUTCMonth();
+		const nowDay = nowDate.getUTCDate();
 
 		const isSameDay =
-			sessionNotAfterDay === nowDay &&
-			sessionNotAfterMonth === nowMonth &&
-			sessionNotAfterYear === nowYear;
+			Number(sessionNotAfterDay) === Number(nowDay) &&
+			Number(sessionNotAfterMonth) === Number(nowMonth) &&
+			Number(sessionNotAfterYear) === Number(nowYear);
 
 		if (isSameDay) {
 			const newNotAfter = new Date(sessionNotAfter);
@@ -103,7 +107,3 @@ export const getProfile = async (
 		return;
 	}
 };
-
-// notes
-// 1. return basic user details
-// 2. extend notAfter (+1day) if the notAfter is same as current day

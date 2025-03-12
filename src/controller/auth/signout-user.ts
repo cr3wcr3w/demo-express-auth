@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { db } from "../../db";
 import { refreshTokens, sessions } from "../../db/schema/auth";
@@ -38,9 +38,10 @@ export const signoutUser = async (req: Request, res: Response) => {
 			res.status(404).json({ message: "Token not found" });
 			return;
 		}
-
+		const nowResult = await db.execute(sql`SELECT NOW() AS current_timestamp`);
+		const now = new Date(nowResult.rows[0].current_timestamp);
 		// if notAfter is less than current time and date, then revoked all refresh tokens based on sessionID
-		if (new Date(tokenRecord[0].notAfter) < new Date()) {
+		if (new Date(tokenRecord[0].notAfter) < now) {
 			const result = await db
 				.update(refreshTokens)
 				.set({ revoked: true })
@@ -72,12 +73,3 @@ export const signoutUser = async (req: Request, res: Response) => {
 		return;
 	}
 };
-
-// notes
-// please check the scenario
-
-// scenario 1
-// 1. signin 2 devices
-// 2. change the notAfter into expired
-// 3. signout in 1 device
-// 4. the other device should logout as well

@@ -43,9 +43,7 @@ export const profiles = authSchema.table("profiles", {
 
 export const sessions = authSchema.table("sessions", {
 	id: uuid("id").notNull().primaryKey().default(sql`gen_random_uuid()`),
-	// If not_after is reached, the session expires.
 	notAfter: timestamp("not_after").notNull(),
-	// If a refresh token is used, refresh_at is updated.
 	refreshAt: timestamp("refresh_at").notNull(),
 	ipAddress: text("ip_address").notNull(),
 	userAgent: text("user_agent").notNull(),
@@ -82,7 +80,7 @@ export const oneTimeTokens = authSchema.table("one_time_tokens", {
 	tokenHash: text("token_hash").notNull().unique(),
 	revoked: boolean("revoked").default(false),
 	metadata: jsonb("metadata"),
-
+	notAfter: timestamp("not_after").notNull(),
 	userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 	updatedAt: timestamp("updated_at").notNull(),

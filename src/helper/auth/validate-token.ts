@@ -1,5 +1,4 @@
-import { fromUnixTime, getUnixTime } from "date-fns";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { db } from "../../db";
 import { refreshTokens, sessions } from "../../db/schema/auth";
@@ -39,7 +38,8 @@ export const isRefreshTokenValidated = async (
 	const decodedRefreshToken = await decryptToken(refreshToken);
 	if (!decodedRefreshToken) return false;
 
-	const now = fromUnixTime(getUnixTime(new Date()));
+	const nowResult = await db.execute(sql`SELECT NOW() AS current_timestamp`);
+	const now = new Date(nowResult.rows[0].current_timestamp);
 
 	// Check if the refresh token is associated with an expired or revoked session
 	const sessionRecord = await db
