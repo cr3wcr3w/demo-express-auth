@@ -25,21 +25,3 @@ To remove container
 ```sh
 docker compose down
 ```
-
-To signup, goto `/api/auth/signup`
-```sh
-{
-    "email": "sample@sample.com",
-    "password": "Sample!kdew",
-    "firstName": "fname", 
-    "lastName": "lname"
-}
-```
-
-To signin, goto `/api/auth/signin`
-```sh
-{
-    "email": "sample@sample.com",
-    "password": "Sample!kdew"
-}
-```

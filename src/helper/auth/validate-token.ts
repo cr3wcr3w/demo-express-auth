@@ -13,13 +13,21 @@ export const decryptToken = async (token: string) => {
 	}
 };
 
-export const isAccessTokenValidated = async (
-	accessToken: string,
-): Promise<boolean> => {
-	if (!accessToken) return false;
-
+export const isAccessTokenValidated = async ({
+	accessToken,
+	returnDecoded = false,
+}: {
+	accessToken: string;
+	returnDecoded: boolean;
+}): Promise<{
+	decodedAccessToken: string | jwt.JwtPayload | null;
+	isTokenValid: boolean;
+}> => {
 	const decodedAccessToken = await decryptToken(accessToken);
-	return !!decodedAccessToken;
+
+	return returnDecoded
+		? { decodedAccessToken, isTokenValid: !!decodedAccessToken }
+		: { decodedAccessToken: null, isTokenValid: !!decodedAccessToken };
 };
 
 export const isRefreshTokenValidated = async (

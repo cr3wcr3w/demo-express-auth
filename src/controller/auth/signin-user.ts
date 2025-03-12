@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { addMonths, fromUnixTime, getUnixTime } from "date-fns";
-import { and, eq, gt, inArray, lt } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { db } from "../../db";
@@ -85,16 +85,6 @@ export async function signInUser(req: Request, res: Response) {
 		try {
 			await db.transaction(async (tx) => {
 				const now = fromUnixTime(getUnixTime(new Date()));
-				const expiredSessions = await tx
-					.select({ id: sessions.id, notAfter: sessions.notAfter })
-					.from(sessions)
-					.where(
-						and(
-							eq(sessions.userId, existingUser[0].id),
-							lt(sessions.notAfter, now),
-						),
-					);
-
 				const activeSession = await tx
 					.select({ id: sessions.id, notAfter: sessions.notAfter })
 					.from(sessions)
@@ -109,14 +99,6 @@ export async function signInUser(req: Request, res: Response) {
 
 				if (activeSession.length > 0) {
 					sessionId = activeSession[0].id;
-
-					if (expiredSessions.length > 0) {
-						const expiredSessionIds = expiredSessions.map((s) => s.id);
-						await tx
-							.update(refreshTokens)
-							.set({ revoked: true })
-							.where(inArray(refreshTokens.sessionId, expiredSessionIds));
-					}
 				} else {
 					const newSession = await tx
 						.insert(sessions)
@@ -204,3 +186,7 @@ export async function signInUser(req: Request, res: Response) {
 // 3. login another (3rd) device
 // 4. check all devices, the first two should be logged out
 // 5. but the 3rd device should be logged in
+
+// notAfter = one month
+// access token = 5 min
+// refresh token = 1 week

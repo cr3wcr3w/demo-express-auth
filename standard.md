@@ -22,4 +22,4 @@
 
 ## linting and formatting 
 - Always run `npm run biome` (not necessarily after every change, but always before pushing to GitHub).
-    - This ensures you catch errors early in GitHub Actions.
+    - This ensures you catch errors early before GitHub Actions run.

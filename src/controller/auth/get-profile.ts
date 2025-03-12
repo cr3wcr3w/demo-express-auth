@@ -14,8 +14,18 @@ export const getProfile = async (
 	try {
 		const authHeader = req.headers.authorization;
 		const accessToken = authHeader?.split(" ")[1];
-		if (!accessToken || !(await isAccessTokenValidated(accessToken))) {
-			res.status(401).json({ message: "Unauthorized" });
+		if (!accessToken) {
+			res.status(500).json({ message: "Internal server error" });
+			return;
+		}
+
+		const { isTokenValid } = await isAccessTokenValidated({
+			accessToken,
+			returnDecoded: false,
+		});
+
+		if (!isTokenValid) {
+			res.status(401).json({ message: "Unauthorized: Invalid token" });
 			return;
 		}
 

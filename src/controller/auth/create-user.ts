@@ -1,13 +1,13 @@
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { db } from "../../db";
-import { users } from "../../db/schema/auth";
+import { roles, users } from "../../db/schema/auth";
 
 // this function will change after invitation signup with token is implemented
 export async function createUser(req: Request, res: Response) {
 	try {
-		const { email, password, firstName, lastName } = req.body;
+		const { email, password, firstName, lastName, invitationToken } = req.body;
 
 		const existingUser = await db
 			.select()
@@ -27,15 +27,33 @@ export async function createUser(req: Request, res: Response) {
 			return;
 		}
 
+		let roleId: string;
+
+		if (!invitationToken) {
+			const role = await db
+				.select({ id: roles.id })
+				.from(roles)
+				.where(eq(roles.name, "guest"))
+				.limit(1);
+			if (role.length < 0) {
+				res.status(500).json({ message: "here: Internal server error" });
+				return;
+			}
+
+			roleId = role[0].id;
+		} else {
+			roleId = invitationToken;
+		}
+
 		const newUser = await db
 			.insert(users)
 			.values({
 				firstName,
 				lastName,
 				email,
-				updatedAt: new Date(),
+				updatedAt: sql`NOW()`,
 				encryptedPassword: hashedPassword,
-				roleId: "10000000-0000-0000-0000-000000000003",
+				roleId: roleId,
 			})
 			.returning({
 				id: users.id,

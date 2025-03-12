@@ -22,6 +22,7 @@ export const authSignupSchema = z.object({
 		}, "Password must include at least 3 of the following: lowercase, uppercase, number, special character (!@#$%^&*)"),
 	firstName: z.string(),
 	lastName: z.string(),
+	invitationToken: z.string().optional(),
 });
 
 export function validateAuthSignup(
@@ -49,6 +50,25 @@ export function validateAuthSignIn(
 	next: NextFunction,
 ): void {
 	const result = authSigninSchema.safeParse(req.body);
+
+	if (!result.success) {
+		res.status(400).json({ message: "Invalid input" });
+		return;
+	}
+
+	next();
+}
+
+export const authInvitationSchema = z.object({
+	roleId: z.string(),
+});
+
+export function validateAuthInvitation(
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): void {
+	const result = authInvitationSchema.safeParse(req.body);
 
 	if (!result.success) {
 		res.status(400).json({ message: "Invalid input" });
