@@ -1,12 +1,32 @@
+import { eq, sql } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
-import { isAccessTokenValidated } from "../helper/auth/validate-token";
+import { db } from "../db";
+import { refreshTokens, sessions } from "../db/schema/auth";
+import {
+	isAccessTokenValidated,
+	isRefreshTokenValidated,
+} from "../helper/auth/validate-token";
 
 // <verb>:<resource>
 // Common verbs include "read", "write", "create", "update", "delete", "approve", "invite",
 // Resources can include specific entities, data types, or functionalities (e.g., "users", "products", "orders", "settings").
 
-// sample use
-// authRoutes.get("/profile", checkPermissions(['read:users', 'write:users']), getProfile);
+/**
+ * Middleware to enforce role-based access control (RBAC).
+ *
+ * - Validates the access token.
+ * - Validates the refresh token, including revocation status.
+ * - Validates if the session is still active (`notAfter`).
+ * - Confirms the user has the required permissions.
+ *
+ * @param requiredPermissions - List of required permission scopes (e.g., `["read:profile"]`).
+ * @returns Express middleware function that enforces RBAC.
+ *
+ * @example
+ * ```ts
+ * authRoutes.get("/profile", checkPermissions(["read:profile"]), getProfile);
+ * ```
+ */
 export const checkPermissions = (requiredPermissions: string[]) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
@@ -23,6 +43,44 @@ export const checkPermissions = (requiredPermissions: string[]) => {
 
 			if (!isTokenValid || !decodedAccessToken) {
 				res.status(401).json({ message: "Unauthorized: Invalid token" });
+				return;
+			}
+
+			const refreshTokenCookies = req.cookies.refreshToken;
+			const isRefreshTokenValidatedResult =
+				await isRefreshTokenValidated(refreshTokenCookies);
+			if (!refreshTokenCookies || !isRefreshTokenValidatedResult) {
+				res.status(401).json({ message: "Unauthorized" });
+				return;
+			}
+
+			const sessionRecord = await db
+				.select({
+					notAfter: sessions.notAfter,
+					revoked: refreshTokens.revoked,
+					sessionId: refreshTokens.sessionId,
+				})
+				.from(refreshTokens)
+				.innerJoin(sessions, eq(refreshTokens.sessionId, sessions.id))
+				.where(eq(refreshTokens.token, refreshTokenCookies))
+				.limit(1);
+
+			const nowResult = await db.execute(
+				sql`SELECT NOW() AS current_timestamp`,
+			);
+			const now = new Date(nowResult.rows[0].current_timestamp);
+
+			if (sessionRecord.length === 0 || sessionRecord[0].revoked) {
+				res.status(401).json({ message: "Unauthorized" });
+				return;
+			}
+
+			const { notAfter } = sessionRecord[0];
+
+			if (notAfter < now) {
+				res
+					.status(401)
+					.json({ message: "Session expired, please log in again" });
 				return;
 			}
 

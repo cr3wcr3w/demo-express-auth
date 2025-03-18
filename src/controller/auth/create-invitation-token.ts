@@ -20,7 +20,7 @@ export async function createInvitationToken(req: Request, res: Response) {
 			notAfter: sql`NOW() + INTERVAL '1 week'`,
 		});
 
-		res.status(201).json({ message: "One-time token created.", token });
+		res.status(201).json({ message: "One-time token created." });
 		return;
 	} catch (_error) {
 		res.status(500).json({ message: "Internal server error" });

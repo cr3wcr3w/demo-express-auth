@@ -27,4 +27,4 @@ docker compose down
 ```
 
 Postman Collection (documentation)
-[jk-added-token-auth.postman_collection.json](./public/jk-added-token-auth.postman_collection.json)
+[jk-added-token-auth.postman_collection.json](./public/backend api.postman_collection.json)

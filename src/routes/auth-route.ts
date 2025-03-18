@@ -5,10 +5,12 @@ import { getAccessToken } from "../controller/auth/get-access-token";
 import { getProfile } from "../controller/auth/get-profile";
 import { signInUser } from "../controller/auth/signin-user";
 import { signoutUser } from "../controller/auth/signout-user";
+import { verifyInvitationToken } from "../controller/auth/verify-invitation-token";
 import {
 	validateAuthInvitation,
 	validateAuthSignIn,
 	validateAuthSignup,
+	validateAuthVerifyInvitation,
 } from "../middleware/auth/validate-body";
 import { checkPermissions } from "../middleware/rabc";
 
@@ -29,4 +31,10 @@ authRoutes.post(
 	checkPermissions(["create:invitation"]),
 	validateAuthInvitation,
 	createInvitationToken,
+);
+
+authRoutes.post(
+	"/verify-invitation",
+	validateAuthVerifyInvitation,
+	verifyInvitationToken,
 );

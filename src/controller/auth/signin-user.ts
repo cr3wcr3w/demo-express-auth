@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { and, eq, gt, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
@@ -41,11 +42,8 @@ export async function signInUser(req: Request, res: Response) {
 
 		// Prevent timing attacks
 		if (existingUser.length === 0) {
-			await bcrypt.hash(
-				// biome-ignore lint/nursery/noSecrets: <explanation>
-				"$2b$10$gJfPmz8qEJeyMYzhr7oxYekT0YhFh2D2WpHGjNY8zGZk2JzrsGqY2GH",
-				10,
-			);
+			const fakePassword = crypto.randomBytes(32).toString("hex");
+			await bcrypt.hash(fakePassword, 10);
 			res.status(401).json({ message: "Invalid input" });
 			return;
 		}
@@ -155,7 +153,7 @@ export async function signInUser(req: Request, res: Response) {
 				permission: permissionsArray,
 			},
 			privateKey,
-			{ expiresIn: "5m", algorithm: "HS256" },
+			{ expiresIn: "1d", algorithm: "HS256" },
 		);
 
 		// Set refresh token cookie
@@ -175,6 +173,6 @@ export async function signInUser(req: Request, res: Response) {
 }
 
 // notAfter = one month
-// access token = 5 min
+// access token = 1 day
 // refresh token = 1 week
 // invite token = 1 week

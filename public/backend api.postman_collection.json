@@ -1,0 +1,263 @@
+{
+	"info": {
+		"_postman_id": "b9864411-1ce2-4fce-bd3a-369b0228e22e",
+		"name": "backend api",
+		"description": "Hellooooo\n\n# Setup instructions\n\n## Run a PostgreSQL Database Locally or in the Cloud\n\nEnvironment setup\n\n1. Create an `.env` file and copy the required variables from `sample.env`.\n    \n2. If you already have a PostgreSQL database, simply provide the URL in the `.env` file.\n    \n3. If you don't have a database, use Docker:\n    \n\n``` bash\ndocker compose up  # Start the database\n# To stop it\ndocker compose down \n\n ```\n\n## Setup Drizzle ORM\n\n``` bash\nnpm run db:generate  # Generate database schema\nnpm run db:migrate   # Apply migrations\n# If you want to view the database dashboard, run:\nnpm run db:studio\n\n ```\n\n## Run the Backend Server\n\n``` bash\nnpm run dev\n\n ```",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "42782865"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "signin",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/signin",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"sample@sample.com\",\n    \"password\": \"Sample!kdew\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/auth/signin"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/signin`\n\n## 🔹 Scopes\n\nNone (Public endpoint for user authentication)\n\n## 🔹 Body Parameters\n\n| **Parameter** | **Type** | **Required** | **Description** |\n| --- | --- | --- | --- |\n| `email` | `string` | ✅ Yes | The email address of the user |\n| `password` | `string` | ✅ Yes | The user's password |\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `200 OK` | `{ \"message\": \"User signin successfully\", \"accessToken\": \"\" }` | User successfully logged in |\n| `400 Bad Request` | `{ \"message\": \"Invalid input\" }` | Email or password is missing/invalid |\n| `401 Unauthorized` | `{ \"message\": \"Invalid input\" }` | Incorrect email or password |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected error |\n\n---\n\n## 🔹 Notes\n\n- **Session & Token Rules:**\n    \n    - ✅ **Access Token (JWT):** Expires in **5 minutes**\n        \n    - ✅ **Refresh Token:** Stored as a **HTTP-only cookie**, expires in **1 week**\n        \n    - ✅ **Session Expiration:** `notAfter = 1 month`\n        \n    - ✅ **Token Rotation:**\n        \n        - On login, if an active session exists, reuse it.\n            \n        - Otherwise, create a new session and issue new tokens\n            \n\n---"
+				},
+				{
+					"name": "signup",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/signup",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"sample@sample.com\",\n    \"password\": \"Sample!kdew\",\n    \"firstName\": \"fname\", \n    \"lastName\": \"lname\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/auth/signup"
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:6000/api/auth/signup Copy",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"new@new.com\",\n    \"password\": \"User!kdew\",\n    \"firstName\": \"fname\", \n    \"lastName\": \"lname\",\n    \"invitationToken\": \"fd416b0746ac115f6944e1a07af83b5604528ac7961180d0be68068dd5f0adc8\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/auth/signup"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/signup`\n\n## 🔹 Scopes\n\nNone (Public endpoint for user registration)\n\n## 🔹 Body Parameters\n\n| **Parameter** | **Type** | **Required** | **Description** |\n| --- | --- | --- | --- |\n| `email` | `string` | ✅ Yes | The email address of the user |\n| `password` | `string` | ✅ Yes | The user's password (must meet complexity requirements) |\n| `firstName` | `string` | ✅ Yes | The user's first name |\n| `lastName` | `string` | ✅ Yes | The user's last name |\n| `invitationToken` | `string` | ❌ No | The optional one-time invitation token for role assignment |\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `201 Created` | `{ \"message\": \"User created successfully\" }` | The user was successfully registered |\n| `400 Bad Request` | `{ \"message\": \"Invalid input\" }` | One or more fields are missing or invalid |\n| `400 Bad Request` | `{ \"message\": \"Invalid or expired invitation token.\" }` | The provided invitation token is not valid or has expired |\n| `400 Bad Request` | `{ \"message\": \"This token has already been used.\" }` | The invitation token has already been redeemed |\n| `409 Conflict` | `{ \"message\": \"An account with this email already exists\" }` | The email is already registered |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected server issue |\n\n---\n\n## 🔹 Notes\n\n- **Invitation Token Rules:**\n    \n    - If no token is provided, the default role is `\"guest\"`."
+				},
+				{
+					"name": "signout",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/signout",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "",
+										"value": "",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"url": "{{base_url}}/api/auth/signout"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/signout`\n\n## 🔹 Scopes\n\nnone\n\n## 🔹 Body Parameters\n\n_None_ (Uses `refreshToken` from cookies)\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `200 OK` | `{ \"message\": \"Signed out\" }` | User successfully signed out, refresh token revoked |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized\" }` | No refresh token provided in cookies |\n| `401 Unauthorized` | `{ \"message\": \"Invalid token\" }` | The provided refresh token is invalid |\n| `404 Not Found` | `{ \"message\": \"Token not found\" }` | No matching refresh token found for the provided token |\n| `404 Not Found` | `{ \"message\": \"No tokens found for this session\" }` | No active refresh tokens were found for this session |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected error during sign-out process |\n\n---\n\n## 🔹 Notes\n\n- **Sign-out Behavior:**\n    \n    - ✅ If **`notAfter`** **(session expiration)** is in the past, **all refresh tokens** for that session are revoked.\n        \n    - ✅ If `notAfter` is still valid, **only the provided refresh token** is revoked.\n        \n- **Security Measures:**\n    \n    - ✅ Tokens are stored as **HTTP-only cookies** for security.\n        \n    - ✅ Prevents unauthorized access by checking `refreshToken` validity before revoking.\n        \n    - ✅ Clears the `refreshToken` cookie upon successful sign-out.\n        \n- **Multi-Device Logout:**\n    \n    - ✅ If session is expired (`notAfter < NOW()`), signing out on **one device** logs out **all devices** under that session.\n        \n    - ✅ Otherwise, only the **current device** is logged out."
+				},
+				{
+					"name": "profile",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/profile",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}",
+										"type": "text"
+									}
+								],
+								"url": "{{base_url}}/api/auth/profile"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**GET** `/api/auth/profile`\n\n## 🔹 Scopes\n\n`read:profile`\n\n## 🔹 Body Parameters\n\n_None_ (Uses `Authorization: Bearer` in headers and `refreshToken` from cookies)\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `200 OK` | `{ \"email\": \"...\", \"firstName\": \"...\", \"lastName\": \"...\" }` | Returns the user profile data |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized: Invalid token\" }` | The `accessToken` is invalid or expired |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized\" }` | The `refreshToken` is invalid or missing in cookies |\n| `403 Forbidden` | `{ \"message\": \"Forbidden: Insufficient permissions\" }` | The user does not have `read:profile` permission |\n| `404 Not Found` | `{ \"message\": \"User not found\" }` | The user does not exist in the database |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected error during profile retrieval |\n\n---\n\n## 🔹 Notes\n\n- **Authentication & Authorization:**\n    \n    - ✅ Requires a valid **JWT** **`accessToken`** in the `Authorization` header.\n        \n    - ✅ Requires a valid **`refreshToken`** stored in cookies.\n        \n    - ✅ Requires the **`read:profile`** permission.\n        \n- **Session Handling:**\n    \n    - ✅ If the session is **expired**, the request will fail with `401 Unauthorized`.\n        \n    - ✅ The refresh token must still be valid to retrieve the profile.\n        \n- **Security Measures:**\n    \n    - ✅ Tokens are stored as **HTTP-only cookies** for security."
+				},
+				{
+					"name": "renew-access-token",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/renew-access-token",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"url": "{{base_url}}/api/auth/renew-access-token"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/renew-access-token`\n\n## 🔹 Scopes\n\n`None`\n\n🔹 Body Parameters\n\n_None_ (Uses `refreshToken` from cookies)\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `200 OK` | `{ \"message\": \"Access token generated successfully\", \"accessToken\": \"...\" }` | Returns a new access token |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized\" }` | The `refreshToken` is invalid, expired, revoked, or missing in cookies |\n| `401 Unauthorized` | `{ \"message\": \"Session expired, please log in again\" }` | The session has expired and the user must log in again |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected error during token renewal |\n\n---\n\n## 🔹 Notes\n\n- **Authentication & Authorization:**\n    \n    - ✅ Requires a valid **`refreshToken`** stored in cookies.\n        \n    - ✅ If the refresh token is **revoked**, the user is logged out.\n        \n    - ✅ If the session is **expired**, the request will fail with `401 Unauthorized`.\n        \n    - ✅ The new `accessToken` will be valid for 1 **day** .\n        \n- **Security Measures:**\n    \n    - ✅ **HTTP-only Cookies**: The refresh token is stored securely in cookies.\n        \n    - ✅ **Permissions Check**: The API ensures the user still has valid permissions before issuing a new token.\n        \n    - ✅ **Session Handling**: Ensures the session associated with the refresh token is still active."
+				},
+				{
+					"name": "generate-invitation",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/invite",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"roleId\": \"f7129912-48e8-4f03-8705-07907da83e26\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/auth/generate-invitation"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/generate-invitation`\n\n## 🔹 Scopes\n\n`create:invitation`\n\n## 🔹 Body Parameters\n\n| **Parameter** | **Type** | **Required** | **Description** |\n| --- | --- | --- | --- |\n| `roleId` | `string` | ✅ Yes | The role ID assigned to the invited user |\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `201 Created` | `{ \"message\": \"One-time token created.\", \"token\": \"...\" }` | Successfully generates a one-time invitation token |\n| `400 Bad Request` | `{ \"message\": \"Invalid input\" }` | Request body is missing `roleId` or has incorrect format |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized\" }` | The request lacks valid authentication credentials |\n| `403 Forbidden` | `{ \"message\": \"Forbidden: Insufficient permissions\" }` | The user does not have `\"create:invitation\"` permission |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected error during token generation |\n\n---\n\n## 🔹 Notes\n\n- **Authentication & Authorization:**\n    \n    - ✅ Requires a valid `accessToken` with `\"create:invitation\"` permission.\n        \n    - ✅ If the user does not have this permission, they receive a `403 Forbidden` response.\n        \n    - permission with `create:invitation`\n        \n- **Invitation Token Details:**\n    \n    - ✅ The generated **one-time token** is stored securely in the database (`one_time_tokens`).\n        \n    - ✅ **Token Expiration:** The token expires **after 1 week** (`notAfter = NOW() + INTERVAL '1 week'`).\n        \n    - ✅ **Token Security:**\n        \n        - The raw token is **hashed** before storing it.\n            \n- **Use Case:**\n    \n    - The generated token is used in the **signup process** to assign a specific `roleId` to the invited user."
+				},
+				{
+					"name": "verify-invitation",
+					"item": [
+						{
+							"name": "http://localhost:6000/api/auth/invite Copy",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"tokenHash\": \"fed9d9ef8fb9c3976d6792707065f0d918ff62f05195353f59393f2bfb138120\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/api/auth/verify-invitation"
+							},
+							"response": []
+						}
+					],
+					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/verify-invitation`\n\n## 🔹 Scopes\n\n**None** (Public API - does not require authentication)\n\n## 🔹 Body Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `tokenHash` | string | ✅ Yes | The hashed one-time invitation token to verify |\n\n## 🔹 Response Messages\n\n| Status Code | Message | Description |\n| --- | --- | --- |\n| **200 OK** | `{ \"message\": \"Token is valid.\" }` | The invitation token is valid and has not expired. |\n| **400 Bad Request** | `{ \"message\": \"Token hash is required.\" }` | The request body is missing the `tokenHash` parameter. |\n| **400 Bad Request** | `{ \"message\": \"Invalid or expired token.\" }` | The token is revoked, expired, or does not exist. |\n| **500 Internal Server Error** | `{ \"message\": \"Internal server error\" }` | Unexpected error during token verification. |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized\" }` | The request lacks valid authentication credentials |\n\n---\n\n## 🔹 Notes\n\n### **Token Verification Logic**\n\n✅ The API verifies if the provided **`tokenHash`** exists in the database.  \n✅ The token must not be **revoked**.  \n✅ The **notAfter** timestamp must be **greater than the current time**, ensuring it is not expired.\n\n### **Security Measures**\n\n✅ This API does **not** require authentication since it verifies public invitation tokens.  \n✅ The **tokenHash** is compared against the securely stored **hashed** tokens.\n\n### **Use Case**\n\n✅ This API is used to check whether an **invitation token** is valid before allowing the user to proceed with **sign-up**."
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "base_url",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"value": "",
+			"type": "default",
+			"disabled": true
+		}
+	]
+}

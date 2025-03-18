@@ -36,7 +36,7 @@ export const getAccessToken = async (req: Request, res: Response) => {
 			return;
 		}
 
-		const { notAfter, sessionId } = sessionRecord[0];
+		const { notAfter } = sessionRecord[0];
 
 		if (notAfter < now) {
 			res.status(401).json({ message: "Session expired, please log in again" });
@@ -97,42 +97,8 @@ export const getAccessToken = async (req: Request, res: Response) => {
 				permission: permissionsArray,
 			},
 			privateKey,
-			{ expiresIn: "5m", algorithm: "HS256" },
+			{ expiresIn: "1d", algorithm: "HS256" },
 		);
-
-		// Generate a new refresh token (ROTATION)
-		const newRefreshToken = jwt.sign(
-			{
-				email: existingUser[0].email,
-				id: sessionId,
-			},
-			privateKey,
-			{ expiresIn: "7d" },
-		);
-
-		// Perform token rotation inside a transaction
-		await db.transaction(async (tx) => {
-			// Revoke old refresh token
-			await tx
-				.update(refreshTokens)
-				.set({ revoked: true })
-				.where(eq(refreshTokens.token, refreshTokenCookies));
-
-			// Insert new refresh token
-			await tx.insert(refreshTokens).values({
-				sessionId: sessionId,
-				token: newRefreshToken,
-				updatedAt: now,
-			});
-		});
-
-		// Set new refresh token in HTTP-only cookie
-		res.cookie("refreshToken", newRefreshToken, {
-			httpOnly: true,
-			secure: true,
-			sameSite: "strict",
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-		});
 
 		res
 			.status(200)
