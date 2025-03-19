@@ -10,7 +10,6 @@ import {
 	validateAuthInvitation,
 	validateAuthSignIn,
 	validateAuthSignup,
-	validateAuthVerifyInvitation,
 } from "../middleware/auth/validate-body";
 import { checkPermissions } from "../middleware/rabc";
 
@@ -33,8 +32,4 @@ authRoutes.post(
 	createInvitationToken,
 );
 
-authRoutes.post(
-	"/verify-invitation",
-	validateAuthVerifyInvitation,
-	verifyInvitationToken,
-);
+authRoutes.post("/verify-invitation", verifyInvitationToken);

@@ -6,7 +6,8 @@ import { oneTimeTokens, roles, users } from "../../db/schema/auth";
 
 export async function createUser(req: Request, res: Response) {
 	try {
-		const { email, password, firstName, lastName, invitationToken } = req.body;
+		const { email, password, firstName, lastName } = req.body;
+		const invitationToken = req.query.invitationToken as string | undefined;
 
 		const existingUser = await db
 			.select()

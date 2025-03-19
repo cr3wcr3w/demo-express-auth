@@ -5,9 +5,9 @@ import { oneTimeTokens } from "../../db/schema/auth";
 
 export async function verifyInvitationToken(req: Request, res: Response) {
 	try {
-		const { tokenHash } = req.body;
+		const invitationToken = req.query.invitationToken as string | undefined;
 
-		if (!tokenHash) {
+		if (!invitationToken) {
 			res.status(400).json({ message: "Token hash is required." });
 			return;
 		}
@@ -20,7 +20,7 @@ export async function verifyInvitationToken(req: Request, res: Response) {
 			.from(oneTimeTokens)
 			.where(
 				and(
-					eq(oneTimeTokens.tokenHash, tokenHash),
+					eq(oneTimeTokens.tokenHash, invitationToken),
 					gt(oneTimeTokens.notAfter, now),
 				),
 			)

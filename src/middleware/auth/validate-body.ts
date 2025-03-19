@@ -22,8 +22,6 @@ export const authSignupSchema = z.object({
 		}, "Password must include at least 3 of the following: lowercase, uppercase, number, special character (!@#$%^&*)"),
 	firstName: z.string(),
 	lastName: z.string(),
-	// this is not needed, this will bypass for sure
-	invitationToken: z.string().optional(),
 });
 
 export function validateAuthSignup(
@@ -70,25 +68,6 @@ export function validateAuthInvitation(
 	next: NextFunction,
 ): void {
 	const result = authInvitationSchema.safeParse(req.body);
-
-	if (!result.success) {
-		res.status(400).json({ message: "Invalid input" });
-		return;
-	}
-
-	next();
-}
-
-export const authVerifyInvitationSchema = z.object({
-	tokenHash: z.string(),
-});
-
-export function validateAuthVerifyInvitation(
-	req: Request,
-	res: Response,
-	next: NextFunction,
-): void {
-	const result = authVerifyInvitationSchema.safeParse(req.body);
 
 	if (!result.success) {
 		res.status(400).json({ message: "Invalid input" });
