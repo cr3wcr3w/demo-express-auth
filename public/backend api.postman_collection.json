@@ -71,19 +71,35 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"email\": \"new@new.com\",\n    \"password\": \"User!kdew\",\n    \"firstName\": \"fname\", \n    \"lastName\": \"lname\",\n    \"invitationToken\": \"fd416b0746ac115f6944e1a07af83b5604528ac7961180d0be68068dd5f0adc8\"\n}",
+									"raw": "{\n    \"email\": \"newAdmin@newAdmin.com\",\n    \"password\": \"User!kdewAdmin\",\n    \"firstName\": \"fnameAdmin\", \n    \"lastName\": \"lnameAdmin\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
 										}
 									}
 								},
-								"url": "{{base_url}}/api/auth/signup"
+								"url": {
+									"raw": "{{base_url}}/api/auth/signup?invitationToken={{invitationToken}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"signup"
+									],
+									"query": [
+										{
+											"key": "invitationToken",
+											"value": "{{invitationToken}}"
+										}
+									]
+								}
 							},
 							"response": []
 						}
 					],
-					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/signup`\n\n## 🔹 Scopes\n\nNone (Public endpoint for user registration)\n\n## 🔹 Body Parameters\n\n| **Parameter** | **Type** | **Required** | **Description** |\n| --- | --- | --- | --- |\n| `email` | `string` | ✅ Yes | The email address of the user |\n| `password` | `string` | ✅ Yes | The user's password (must meet complexity requirements) |\n| `firstName` | `string` | ✅ Yes | The user's first name |\n| `lastName` | `string` | ✅ Yes | The user's last name |\n| `invitationToken` | `string` | ❌ No | The optional one-time invitation token for role assignment |\n\n---\n\n## 🔹 Response Messages\n\n| **Status Code** | **Message** | **Description** |\n| --- | --- | --- |\n| `201 Created` | `{ \"message\": \"User created successfully\" }` | The user was successfully registered |\n| `400 Bad Request` | `{ \"message\": \"Invalid input\" }` | One or more fields are missing or invalid |\n| `400 Bad Request` | `{ \"message\": \"Invalid or expired invitation token.\" }` | The provided invitation token is not valid or has expired |\n| `400 Bad Request` | `{ \"message\": \"This token has already been used.\" }` | The invitation token has already been redeemed |\n| `409 Conflict` | `{ \"message\": \"An account with this email already exists\" }` | The email is already registered |\n| `500 Internal Server Error` | `{ \"message\": \"Internal server error\" }` | Unexpected server issue |\n\n---\n\n## 🔹 Notes\n\n- **Invitation Token Rules:**\n    \n    - If no token is provided, the default role is `\"guest\"`."
+					"description": "# 🔹 Endpoint\n\n**POST** `/api/auth/signup`\n\n# 🔹 Scopes\n\nNone (Public endpoint for user registration)\n\n# 🔹 Body Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| email | string | ✅ Yes | The email address of the user |\n| password | string | ✅ Yes | The user's password (must meet complexity requirements) |\n| firstName | string | ✅ Yes | The user's first name |\n| lastName | string | ✅ Yes | The user's last name |\n\n# 🔹 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| invitationToken | string | ❌ No | The optional one-time invitation token for role assignment |\n\n---\n\n# 🔹 Response Messages\n\n| Status Code | Message | Description |\n| --- | --- | --- |\n| **201 Created** | `{ \"message\": \"User created successfully\" }` | The user was successfully registered |\n| **400 Bad Request** | `{ \"message\": \"Invalid input\" }` | One or more fields are missing or invalid |\n| **400 Bad Request** | `{ \"message\": \"Invalid or expired invitation token.\" }` | The provided invitation token is not valid or has expired |\n| **400 Bad Request** | `{ \"message\": \"This token has already been used.\" }` | The invitation token has already been redeemed |\n| **409 Conflict** | `{ \"message\": \"An account with this email already exists\" }` | The email is already registered |\n| **500 Internal Server Error** | `{ \"message\": \"Internal server error\" }` | Unexpected server issue |\n\n---\n\n# 🔹 Notes\n\n### ✅ **Invitation Token Rules:**\n\n- If no `invitationToken` is provided, the default role is **\"guest\"**.\n    \n- The `invitationToken` should be passed as a **query parameter**, not in the request body.\n    \n\n---\n\nThis should now reflect the changes you made. 🚀 Let me know if you need any more modifications!"
 				},
 				{
 					"name": "signout",
@@ -204,19 +220,35 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"tokenHash\": \"fed9d9ef8fb9c3976d6792707065f0d918ff62f05195353f59393f2bfb138120\"\r\n}",
+									"raw": "",
 									"options": {
 										"raw": {
 											"language": "json"
 										}
 									}
 								},
-								"url": "{{base_url}}/api/auth/verify-invitation"
+								"url": {
+									"raw": "{{base_url}}/api/auth/verify-invitation?invitationToken={{invitationToken}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"verify-invitation"
+									],
+									"query": [
+										{
+											"key": "invitationToken",
+											"value": "{{invitationToken}}"
+										}
+									]
+								}
 							},
 							"response": []
 						}
 					],
-					"description": "## 🔹 Endpoint\n\n**POST** `/api/auth/verify-invitation`\n\n## 🔹 Scopes\n\n**None** (Public API - does not require authentication)\n\n## 🔹 Body Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `tokenHash` | string | ✅ Yes | The hashed one-time invitation token to verify |\n\n## 🔹 Response Messages\n\n| Status Code | Message | Description |\n| --- | --- | --- |\n| **200 OK** | `{ \"message\": \"Token is valid.\" }` | The invitation token is valid and has not expired. |\n| **400 Bad Request** | `{ \"message\": \"Token hash is required.\" }` | The request body is missing the `tokenHash` parameter. |\n| **400 Bad Request** | `{ \"message\": \"Invalid or expired token.\" }` | The token is revoked, expired, or does not exist. |\n| **500 Internal Server Error** | `{ \"message\": \"Internal server error\" }` | Unexpected error during token verification. |\n| `401 Unauthorized` | `{ \"message\": \"Unauthorized\" }` | The request lacks valid authentication credentials |\n\n---\n\n## 🔹 Notes\n\n### **Token Verification Logic**\n\n✅ The API verifies if the provided **`tokenHash`** exists in the database.  \n✅ The token must not be **revoked**.  \n✅ The **notAfter** timestamp must be **greater than the current time**, ensuring it is not expired.\n\n### **Security Measures**\n\n✅ This API does **not** require authentication since it verifies public invitation tokens.  \n✅ The **tokenHash** is compared against the securely stored **hashed** tokens.\n\n### **Use Case**\n\n✅ This API is used to check whether an **invitation token** is valid before allowing the user to proceed with **sign-up**."
+					"description": "# 🔹 Endpoint\n\n**GET** `/api/auth/verify-invitation`\n\n# 🔹 Scopes\n\nscope \"verify-invitation\"\n\n# 🔹 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| invitationToken | string | ✅ Yes | The hashed one-time invitation token to verify |\n\n---\n\n# 🔹 Response Messages\n\n| Status Code | Message | Description |\n| --- | --- | --- |\n| **200 OK** | `{ \"message\": \"Token is valid.\" }` | The invitation token is valid and has not expired. |\n| **400 Bad Request** | `{ \"message\": \"Token hash is required.\" }` | The request query is missing the `invitationToken` parameter. |\n| **400 Bad Request** | `{ \"message\": \"Invalid or expired token.\" }` | The token is revoked, expired, or does not exist. |\n| **500 Internal Server Error** | `{ \"message\": \"Internal server error\" }` | Unexpected error during token verification. |\n\n---\n\n# 🔹 Notes\n\n### ✅ **Token Verification Logic:**\n\n- The API verifies if the provided `invitationToken` exists in the database.\n    \n- The token **must not be revoked**.\n    \n- The `notAfter` timestamp must be **greater than the current time**, ensuring it is not expired.\n    \n\n### 🔒 **Security Measures:**\n\n- This API does **not require authentication**, as it verifies public invitation tokens.\n    \n- The `invitationToken` is compared against the securely stored **hashed** tokens in the database.\n    \n\n### 🎯 **Use Case:**\n\n- This API is used to check whether an **invitation token is valid** before allowing the user to proceed with sign-up.\n    \n\n---\n\nThis now reflects your recent update. 🚀 Let me know if you need any tweaks!"
 				}
 			]
 		}
@@ -251,13 +283,13 @@
 		},
 		{
 			"key": "base_url",
-			"value": "",
+			"value": "http://localhost:6000",
 			"type": "string"
 		},
 		{
+			"key": "invitationToken",
 			"value": "",
-			"type": "default",
-			"disabled": true
+			"type": "default"
 		}
 	]
 }
