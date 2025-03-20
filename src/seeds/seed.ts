@@ -1,6 +1,10 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { permissions, rolePermissions, roles } from "../db/schema/auth";
+import {
+	permissions,
+	rolePermissionConnection,
+	roles,
+} from "../db/schema/auth";
 
 (async function seed() {
 	try {
@@ -57,6 +61,12 @@ import { permissions, rolePermissions, roles } from "../db/schema/auth";
 				scope: "read:profile",
 				updatedAt: sql`NOW()`,
 			},
+			{
+				id: "3bcc231d-6ad6-4095-9e3b-b38196e8d868",
+				description: "Can generate access token",
+				scope: "generate:access-token",
+				updatedAt: sql`NOW()`,
+			},
 		]);
 
 		const roleIds = [
@@ -71,16 +81,25 @@ import { permissions, rolePermissions, roles } from "../db/schema/auth";
 			roleId,
 			permissionId: "12c8c2cb-8ed1-4f6d-8f1a-d47937a15992",
 		}));
+		const rolePermissionsForGenerateAccessToken = roleIds.map((roleId) => ({
+			roleId,
+			permissionId: "3bcc231d-6ad6-4095-9e3b-b38196e8d868",
+		}));
 
 		// biome-ignore lint/suspicious/noConsole:
 		console.log("seeding role permission");
-		await db.insert(rolePermissions).values([
+		await db.insert(rolePermissionConnection).values([
 			{
 				roleId: "f7129912-48e8-4f03-8705-07907da83e26",
 				permissionId: "ab153b3f-a8c5-45f2-834c-5f664df2e609",
 			},
 		]);
-		await db.insert(rolePermissions).values(rolePermissionsForReadProfile);
+		await db
+			.insert(rolePermissionConnection)
+			.values(rolePermissionsForReadProfile);
+		await db
+			.insert(rolePermissionConnection)
+			.values(rolePermissionsForGenerateAccessToken);
 
 		// biome-ignore lint/suspicious/noConsole:
 		console.log("Seed data inserted successfully!");

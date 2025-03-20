@@ -7,7 +7,7 @@ import { db } from "../../db";
 import {
 	permissions,
 	refreshTokens,
-	rolePermissions,
+	rolePermissionConnection,
 	roles,
 	sessions,
 	users,
@@ -63,9 +63,12 @@ export async function signInUser(req: Request, res: Response) {
 		// users must have a role in default
 		const permissionList = await db
 			.select({ scope: permissions.scope })
-			.from(rolePermissions)
-			.innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
-			.where(eq(rolePermissions.roleId, existingUser[0].roleId));
+			.from(rolePermissionConnection)
+			.innerJoin(
+				permissions,
+				eq(rolePermissionConnection.permissionId, permissions.id),
+			)
+			.where(eq(rolePermissionConnection.roleId, existingUser[0].roleId));
 
 		// if the permission list is empty then return internal server error
 		if (permissionList.length === 0) {
@@ -123,7 +126,7 @@ export async function signInUser(req: Request, res: Response) {
 				refreshToken = jwt.sign(
 					{
 						email: existingUser[0].email,
-						id: sessionId,
+						role: existingUser[0].role,
 					},
 					privateKey,
 					{ expiresIn: "7d" },

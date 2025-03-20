@@ -112,8 +112,8 @@ export const permissions = authSchema.table("permissions", {
 	updatedAt: timestamp("updated_at").notNull(),
 });
 
-export const rolePermissions = authSchema.table(
-	"role_permissions",
+export const rolePermissionConnection = authSchema.table(
+	"role_permissions_connection",
 	{
 		roleId: uuid("role_id")
 			.notNull()

@@ -5,7 +5,7 @@ import { db } from "../../db";
 import {
 	permissions,
 	refreshTokens,
-	rolePermissions,
+	rolePermissionConnection,
 	roles,
 	sessions,
 	users,
@@ -74,9 +74,12 @@ export const getAccessToken = async (req: Request, res: Response) => {
 
 		const permissionList = await db
 			.select({ scope: permissions.scope })
-			.from(rolePermissions)
-			.innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
-			.where(eq(rolePermissions.roleId, existingUser[0].roleId));
+			.from(rolePermissionConnection)
+			.innerJoin(
+				permissions,
+				eq(rolePermissionConnection.permissionId, permissions.id),
+			)
+			.where(eq(rolePermissionConnection.roleId, existingUser[0].roleId));
 
 		if (permissionList.length === 0) {
 			res.status(500).json({ message: "Internal server error" });

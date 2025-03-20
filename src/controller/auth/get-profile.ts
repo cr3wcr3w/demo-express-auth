@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { db } from "../../db";
-import { refreshTokens, sessions, users } from "../../db/schema/auth";
+import { refreshTokens, roles, sessions, users } from "../../db/schema/auth";
 
 export const getProfile = async (
 	req: Request,
@@ -33,8 +33,11 @@ export const getProfile = async (
 				email: users.email,
 				firstName: users.firstName,
 				lastName: users.lastName,
+				roleId: users.roleId,
+				roleName: roles.name,
 			})
 			.from(users)
+			.leftJoin(roles, eq(users.roleId, roles.id))
 			.where(eq(users.id, userId))
 			.limit(1);
 

@@ -21,13 +21,26 @@ authRoutes.post("/signin", validateAuthSignIn, signInUser);
 
 authRoutes.post("/signout", signoutUser);
 
-authRoutes.get("/profile", checkPermissions(["read:profile"]), getProfile);
+authRoutes.get(
+	"/profile",
+	checkPermissions({ requiredPermissions: ["read:profile"] }),
+	getProfile,
+);
 
-authRoutes.post("/renew-access-token", getAccessToken);
+authRoutes.post(
+	"/renew-access-token",
+	checkPermissions({
+		requiredPermissions: ["generate:access-token"],
+		checkAccessToken: false,
+	}),
+	getAccessToken,
+);
 
 authRoutes.post(
 	"/generate-invitation",
-	checkPermissions(["create:invitation"]),
+	checkPermissions({
+		requiredPermissions: ["create:invitation"],
+	}),
 	validateAuthInvitation,
 	createInvitationToken,
 );
